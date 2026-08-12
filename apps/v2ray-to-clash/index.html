@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>V2Ray → Clash 转换</title>
+  <style>
+    :root {
+      --bg: #f5f7ff;
+      --panel: rgba(255, 255, 255, 0.72);
+      --ink: rgba(15, 23, 42, 0.92);
+      --muted: rgba(15, 23, 42, 0.55);
+      --line: rgba(15, 23, 42, 0.14);
+      --accent: #2f6bff;
+      --accent-dark: #4a8dff;
+      --accent-soft: rgba(47, 107, 255, 0.12);
+      --ok: #10884f;
+      --err: #d43b3b;
+      --code: rgba(15, 23, 42, 0.05);
+      --shadow: 0 28px 70px rgba(15, 23, 42, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 20px 14px 60px;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 780px at 12% 10%, rgba(47, 107, 255, 0.2), transparent 60%),
+        radial-gradient(980px 680px at 88% 28%, rgba(255, 96, 200, 0.14), transparent 55%),
+        radial-gradient(900px 720px at 60% 96%, rgba(54, 214, 191, 0.18), transparent 58%),
+        linear-gradient(180deg, #f8faff, #eef2ff 60%, #f7f9ff);
+    }
+
+    .wrap { width: min(980px, 100%); margin: 0 auto; }
+
+    .back {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-bottom: 14px; padding: 7px 13px;
+      border: 1px solid var(--line); border-radius: 999px;
+      background: rgba(255, 255, 255, 0.6);
+      color: var(--accent-dark); font-size: 13px; font-weight: 600;
+      text-decoration: none;
+    }
+
+    h1 { margin: 0 0 6px; font-size: clamp(24px, 5.5vw, 34px); line-height: 1.15; }
+    .sub { color: var(--muted); font-size: 13.5px; margin-bottom: 18px; line-height: 1.7; }
+
+    .card {
+      padding: clamp(16px, 4vw, 24px);
+      margin-bottom: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.86);
+      border-radius: 20px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 7px; font-weight: 600; }
+
+    textarea, input[type=text], input[type=password], input[type=number], select {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--ink);
+      /* 16px 是底线：更小会触发 iOS Safari 聚焦自动放大 */
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 180px; resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px; line-height: 1.6;
+    }
+
+    @media (max-width: 560px) { textarea { font-size: 16px; } }
+
+    .opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
+    .opt-check { display: flex; align-items: center; gap: 8px; font-size: 14px; padding-top: 6px; }
+    .opt-check input { width: 18px; height: 18px; margin: 0; }
+    .opt-check label { margin: 0; font-weight: 500; color: var(--ink); }
+
+    button {
+      min-height: 48px; padding: 0 22px;
+      border: 0; border-radius: 14px;
+      color: #f8fffc;
+      background: linear-gradient(120deg, var(--accent), var(--accent-dark));
+      box-shadow: 0 14px 34px rgba(47, 107, 255, 0.26);
+      font-size: 15px; font-weight: 700; font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.16s ease;
+    }
+    button:hover { transform: translateY(-2px); }
+    button:disabled { opacity: 0.5; transform: none; cursor: default; }
+
+    button.ghost {
+      color: var(--accent-dark);
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(47, 107, 255, 0.24);
+      box-shadow: none;
+      min-height: 42px; padding: 0 16px; font-size: 14px; font-weight: 600;
+    }
+
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    @media (max-width: 560px) { .btn-row > button { width: 100%; } }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+    .tag {
+      padding: 4px 12px; border-radius: 999px; font-size: 12.5px;
+      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.7);
+    }
+    .tag b { color: var(--accent); }
+
+    .msg { padding: 10px 13px; border-radius: 11px; font-size: 13px; margin-bottom: 8px; line-height: 1.6; word-break: break-all; }
+    .msg.note { background: var(--accent-soft); color: var(--accent-dark); }
+    .msg.err { background: rgba(212, 59, 59, 0.1); color: var(--err); }
+
+    pre {
+      margin: 0; padding: 14px;
+      border: 1px solid var(--line); border-radius: 12px;
+      background: var(--code);
+      max-height: 380px; overflow: auto;
+      font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    h2 { font-size: 16px; margin: 0 0 12px; }
+
+    .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+    .qr-item { text-align: center; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255, 255, 255, 0.75); }
+    .qr-item svg, .qr-item img { width: 100%; height: auto; border-radius: 8px; }
+    .qr-item .nm { font-size: 12px; margin-top: 8px; color: var(--muted); word-break: break-all; }
+
+    .sub-url { display: flex; gap: 8px; align-items: center; margin: 12px 0; }
+    /* 字号保持 16px：这是个可聚焦的输入框，更小会触发 iOS Safari 自动放大 */
+    .sub-url input { flex: 1; min-width: 0; font-family: ui-monospace, Menlo, monospace; font-size: 16px; }
+    .sub-url button { flex: 0 0 auto; white-space: nowrap; }
+
+    .status { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+    .dot.on { background: var(--ok); box-shadow: 0 0 0 4px rgba(16, 136, 79, 0.15); }
+    .dot.off { background: var(--muted); }
+
+    .hide { display: none; }
+    .foot { color: var(--muted); font-size: 12.5px; line-height: 1.9; margin-top: 8px; }
+    code { background: var(--code); padding: 1px 6px; border-radius: 5px; font-size: 12px; }
+    .center-qr { text-align: center; }
+    .center-qr svg { max-width: 240px; width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="../../">← 返回工具入口</a>
+    <h1>V2Ray → Clash 转换</h1>
+    <div class="sub">
+      把 vless / vmess / trojan / ss / hysteria2 等节点链接转成 Clash 配置。<br>
+      <b>转换全部在你自己的浏览器里完成，节点信息不会上传到任何服务器。</b>
+    </div>
+
+    <div class="card">
+      <label for="input">粘贴节点链接（一行一条），或粘贴 base64 订阅内容</label>
+      <textarea id="input" spellcheck="false" placeholder="vless://uuid@example.com:443?security=reality&sni=www.apple.com&pbk=xxx&fp=chrome&flow=xtls-rprx-vision#香港节点
+hysteria2://password@example.com:443?sni=example.com&insecure=1#日本节点"></textarea>
+
+      <div class="opts">
+        <div>
+          <label for="mode">配置模板</label>
+          <select id="mode">
+            <option value="full">完整分流（推荐）</option>
+            <option value="mini">精简规则</option>
+            <option value="proxies">只要节点段</option>
+          </select>
+        </div>
+        <div>
+          <label for="port">混合端口</label>
+          <input type="number" id="port" value="7890" />
+        </div>
+        <div>
+          <label for="testurl">测速地址</label>
+          <select id="testurl">
+            <option value="https://www.gstatic.com/generate_204">gstatic（默认）</option>
+            <option value="http://cp.cloudflare.com/generate_204">cloudflare</option>
+            <option value="http://www.apple.com/library/test/success.html">apple</option>
+          </select>
+        </div>
+        <div class="opt-check">
+          <input type="checkbox" id="region" checked /><label for="region">按地区分组</label>
+        </div>
+        <div class="opt-check">
+          <input type="checkbox" id="lan" /><label for="lan">允许局域网</label>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="go">开始转换</button>
+      </div>
+    </div>
+
+    <div id="result" class="hide">
+      <div class="card">
+        <div class="tags" id="tags"></div>
+        <div id="msgs"></div>
+        <div class="btn-row">
+          <button class="ghost" id="btn-copy">复制配置全文</button>
+          <button class="ghost" id="btn-download">下载 .yaml 文件</button>
+        </div>
+        <div class="foot" id="import-hint">
+          手机上：点「下载 .yaml 文件」，然后在 Clash 里选「从文件导入 / 导入配置」。
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>生成的 Clash 配置</h2>
+        <pre id="yaml"></pre>
+      </div>
+
+      <div class="card" id="sub-card">
+        <h2>订阅链接</h2>
+        <div class="status">
+          <span class="dot" id="be-dot"></span>
+          <span id="be-text">正在检测后端…</span>
+        </div>
+        <div id="sub-idle">
+          <div class="foot" id="sub-desc"></div>
+          <div class="btn-row">
+            <button class="ghost" id="btn-sub">生成订阅链接</button>
+          </div>
+        </div>
+        <div id="sub-done" class="hide">
+          <div class="sub-url">
+            <input type="text" id="suburl" readonly />
+            <button class="ghost" id="btn-copy-url">复制</button>
+          </div>
+          <div class="center-qr" id="subqr"></div>
+          <div class="foot">
+            用 Clash 扫这个码，或把链接粘进「添加订阅」。<br>
+            这是临时订阅链接；配置 24 小时后自动清除，请妥善保管。
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>单个节点二维码</h2>
+        <div class="foot" style="margin-bottom:14px">
+          扫码可把单个节点导入 v2rayN / v2rayNG / Shadowrocket 等客户端（不是 Clash 订阅）。
+        </div>
+        <div class="qr-grid" id="qrs"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>注意事项</h2>
+      <div class="foot">
+        <b>内核要求：</b>hysteria2、hysteria、tuic、anytls、vless-reality、vless-vision
+        这些协议必须用 mihomo（Clash Meta）内核 —— Clash Verge Rev、FlClash、mihomo Party、
+        ClashMetaForAndroid、Stash 都可以。老版 ClashX、Clash for Windows <b>不支持</b>。<br>
+        <b>订阅链接：</b>浏览器有跨域限制，直接粘贴别人家的订阅网址是拉不动的，请粘贴节点本身，
+        或下载配置文件后直接导入客户端。
+        里的本地工具，双击「启动.command」即可。
+      </div>
+    </div>
+  </div>
+
+  <script src="../../config/ai.config.js"></script>
+  <script src="../shared/ai-auth.js"></script>
+  <script src="qr.js"></script>
+  <script src="converter.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>工具入口</title>
+  <style>
+    :root {
+      --bg: #f5f7ff;
+      --panel: rgba(255, 255, 255, 0.68);
+      --ink: rgba(15, 23, 42, 0.92);
+      --muted: rgba(15, 23, 42, 0.55);
+      --line: rgba(15, 23, 42, 0.14);
+      --accent: #2f6bff;
+      --accent-dark: #4a8dff;
+      --accent-soft: rgba(47, 107, 255, 0.12);
+      --shadow: 0 28px 70px rgba(15, 23, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 780px at 12% 10%, rgba(47, 107, 255, 0.22), transparent 60%),
+        radial-gradient(980px 680px at 88% 28%, rgba(255, 96, 200, 0.16), transparent 55%),
+        radial-gradient(900px 720px at 60% 96%, rgba(54, 214, 191, 0.2), transparent 58%),
+        linear-gradient(180deg, #f8faff, #eef2ff 60%, #f7f9ff);
+    }
+
+    main {
+      width: min(720px, 100%);
+      padding: clamp(28px, 6vw, 52px);
+      border: 1px solid rgba(255, 255, 255, 0.86);
+      border-radius: 26px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--accent-dark);
+      background: rgba(255, 255, 255, 0.58);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 5px var(--accent-soft);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 7vw, 58px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      margin-top: 34px;
+    }
+
+    .tool-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 22px;
+      border-radius: 14px;
+      color: #f8fffc;
+      background: linear-gradient(120deg, var(--accent), var(--accent-dark));
+      box-shadow: 0 14px 34px rgba(47, 107, 255, 0.28);
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .tool-button.secondary {
+      color: var(--accent-dark);
+      background: rgba(255, 255, 255, 0.66);
+      border: 1px solid rgba(47, 107, 255, 0.24);
+      box-shadow: 0 12px 30px rgba(47, 107, 255, 0.12);
+    }
+
+    .tool-button.matchday {
+      color: #17230d;
+      background: linear-gradient(120deg, #d7ff62, #aee72c);
+      box-shadow: 0 14px 34px rgba(116, 166, 22, 0.24);
+    }
+
+    .tool-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 40px rgba(23, 111, 99, 0.3);
+    }
+
+    .tool-button:focus-visible {
+      outline: 3px solid rgba(47, 107, 255, 0.28);
+      outline-offset: 4px;
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 14px;
+      }
+
+      main {
+        border-radius: 22px;
+      }
+
+      .tool-button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">本地浏览器工具集</div>
+    <h1>购票信息处理台</h1>
+    <nav class="actions" aria-label="工具入口">
+      <a class="tool-button matchday" href="./apps/admin/">比赛信息收集后台</a>
+      <a class="tool-button" href="./apps/legacy-parser/">信息拆分工具</a>
+      <a class="tool-button" href="./apps/parser-v2/">信息拆分工具 V2</a>
+      <a class="tool-button secondary" href="./apps/ai-chat/">AI 工作台</a>
+      <a class="tool-button secondary" href="./apps/file-drop/">文件传输</a>
+      <a class="tool-button secondary" href="./apps/v2ray-to-clash/">节点转 Clash</a>
+    </nav>
+  </main>
+</body>
+</html>

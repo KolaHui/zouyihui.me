@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>信息拆分工具 V2</title>
+  <style>
+    :root {
+      --bg: #f5f7ff;
+      --panel: rgba(255, 255, 255, 0.78);
+      --ink: rgba(15, 23, 42, 0.92);
+      --muted: rgba(15, 23, 42, 0.55);
+      --line: rgba(15, 23, 42, 0.14);
+      --accent: #2f6bff;
+      --accent-dark: #4a8dff;
+      --accent-soft: rgba(47, 107, 255, 0.12);
+      --green: #0e9f6e;
+      --green-soft: rgba(14, 159, 110, 0.12);
+      --red: #e02424;
+      --red-soft: rgba(224, 36, 36, 0.1);
+      --shadow: 0 20px 50px rgba(15, 23, 42, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 20px clamp(12px, 3vw, 40px) 60px;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 780px at 12% 10%, rgba(47, 107, 255, 0.18), transparent 60%),
+        radial-gradient(980px 680px at 88% 28%, rgba(255, 96, 200, 0.12), transparent 55%),
+        radial-gradient(900px 720px at 60% 96%, rgba(54, 214, 191, 0.16), transparent 58%),
+        linear-gradient(180deg, #f8faff, #eef2ff 60%, #f7f9ff);
+    }
+
+    .page {
+      width: min(1080px, 100%);
+      margin: 0 auto;
+    }
+
+    header.top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    header.top h1 {
+      margin: 0;
+      font-size: clamp(22px, 4vw, 30px);
+    }
+
+    header.top .head-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    a.back-home {
+      color: var(--accent-dark);
+      font-size: 13px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    /* 步骤条 */
+    .steps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 18px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .steps li {
+      flex: 1 1 150px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.55);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .steps li .dot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.08);
+      color: var(--muted);
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .steps li.active {
+      border-color: rgba(47, 107, 255, 0.5);
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+    }
+
+    .steps li.active .dot {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .steps li.done {
+      color: var(--green);
+      border-color: rgba(14, 159, 110, 0.35);
+    }
+
+    .steps li.done .dot {
+      background: var(--green);
+      color: #fff;
+    }
+
+    /* 面板 */
+    .panel {
+      display: none;
+      padding: clamp(18px, 3vw, 30px);
+      border: 1px solid rgba(255, 255, 255, 0.86);
+      border-radius: 20px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .panel.show { display: block; }
+
+    .panel h2 {
+      margin: 0 0 6px;
+      font-size: 18px;
+    }
+
+    .panel .hint {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 260px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.85);
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.7;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      outline: 2px solid rgba(47, 107, 255, 0.35);
+      border-color: transparent;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .compare .col-label {
+      margin: 0 0 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .raw-view {
+      min-height: 260px;
+      max-height: 480px;
+      overflow: auto;
+      margin: 0;
+      padding: 14px;
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.03);
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-family: inherit;
+    }
+
+    @media (max-width: 720px) {
+      .compare { grid-template-columns: 1fr; }
+
+      /* iOS Safari 上小于 16px 的输入框聚焦会自动放大页面 */
+      td input,
+      textarea,
+      .filename-row input {
+        font-size: 16px;
+      }
+    }
+
+    /* 按钮 */
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .actions .spacer { flex: 1; }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 18px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    button.primary {
+      color: #fff;
+      background: linear-gradient(120deg, var(--accent), var(--accent-dark));
+      box-shadow: 0 10px 26px rgba(47, 107, 255, 0.28);
+    }
+
+    button.secondary {
+      color: var(--accent-dark);
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(47, 107, 255, 0.24);
+    }
+
+    button.ghost {
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid var(--line);
+    }
+
+    button:not(:disabled):hover { transform: translateY(-1px); }
+
+    /* 提示条 */
+    .notice {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .notice.show { display: block; }
+    .notice.info { background: var(--accent-soft); color: var(--accent-dark); display: block; }
+    .notice.success { background: var(--green-soft); color: var(--green); display: block; }
+    .notice.error { background: var(--red-soft); color: var(--red); display: block; }
+
+    .warn-list {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+
+    .warn-list li { margin: 2px 0; }
+
+    /* 表格 */
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 900px;
+    }
+
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #eef2ff;
+      color: var(--muted);
+      font-size: 12px;
+      z-index: 1;
+    }
+
+    td input {
+      width: 100%;
+      min-width: 70px;
+      padding: 6px 8px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--ink);
+    }
+
+    td input:hover { border-color: var(--line); }
+
+    td input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: #fff;
+    }
+
+    td.cell-warn input, td input.cell-warn {
+      background: var(--red-soft);
+      border-color: rgba(224, 36, 36, 0.4);
+    }
+
+    /* 红色：明确的错误或缺失；黄色：需要人工确认 */
+    td input.cell-error {
+      background: rgba(255, 59, 48, 0.14);
+      border-color: rgba(255, 59, 48, 0.55);
+    }
+
+    td input.cell-confirm {
+      background: rgba(255, 204, 0, 0.22);
+      border-color: rgba(230, 167, 0, 0.6);
+    }
+
+    /* 点击问题格子弹出的原因气泡（iOS 深色提示风格，不挡输入） */
+    .cell-tip {
+      position: fixed;
+      z-index: 99;
+      max-width: 260px;
+      padding: 7px 11px;
+      border-radius: 10px;
+      background: rgba(30, 30, 32, 0.92);
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.45;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+      pointer-events: none;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+
+    .cell-tip-error { background: rgba(180, 30, 25, 0.94); }
+
+    /* AI 最终检查：进度条下方的模型思考过程（灰色小字，可滚动） */
+    .audit-thinking {
+      margin-top: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: rgba(60, 60, 67, 0.55);
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 110px;
+      overflow-y: auto;
+    }
+
+    tr.group-summary td {
+      background: rgba(15, 23, 42, 0.05);
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    tr.grand-total td {
+      background: rgba(47, 107, 255, 0.08);
+      color: var(--accent-dark);
+      font-weight: 700;
+    }
+
+    .row-btn {
+      min-height: 26px;
+      padding: 0 8px;
+      margin-right: 4px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.05);
+      border: none;
+    }
+
+    .row-btn:hover { color: var(--accent-dark); }
+
+    .table-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .filename-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .filename-row label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .filename-row input {
+      flex: 1;
+      min-width: 220px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      font-size: 13px;
+      font-family: inherit;
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .audit-box {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.6);
+      font-size: 13px;
+      line-height: 1.7;
+      display: none;
+    }
+
+    .audit-box.show { display: block; }
+    .audit-box.ok { border-color: rgba(14, 159, 110, 0.4); background: var(--green-soft); }
+    .audit-box.bad { border-color: rgba(224, 36, 36, 0.35); background: var(--red-soft); }
+    .audit-box h3 { margin: 0 0 6px; font-size: 14px; }
+    .audit-box ul { margin: 6px 0 0; padding-left: 18px; }
+
+    .loading-dot::after {
+      content: "…";
+      animation: dots 1.2s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0% { content: ""; }
+      25% { content: "."; }
+      50% { content: ".."; }
+      75% { content: "..."; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="top">
+      <h1>信息拆分工具 <span style="color: var(--accent);">V2</span></h1>
+      <div class="head-actions">
+        <button class="ghost" id="resetBtn" type="button">清空重来</button>
+        <a class="back-home" href="../../index.html">← 返回入口</a>
+      </div>
+    </header>
+
+    <ol class="steps" id="stepsBar">
+      <li data-step="1"><span class="dot">1</span>粘贴原始文本</li>
+      <li data-step="2"><span class="dot">2</span>AI 整理格式</li>
+      <li data-step="3"><span class="dot">3</span>拆分并修正</li>
+      <li data-step="4"><span class="dot">4</span>模板预览与导出</li>
+    </ol>
+
+    <!-- 步骤 1 -->
+    <section class="panel" id="panel1">
+      <h2>粘贴多人发来的个人信息</h2>
+      <p class="hint">把微信等渠道收到的原始文本直接粘贴进来，不同人发来的消息之间保留一个空行即可（一个消息块 = 一伙人）。<br />隐私说明：点「AI 整理格式」会把粘贴的文本（含姓名、证件号、手机号）发送给外部 AI 模型处理；不希望外发请点「跳过 AI，直接拆分」，全部在本机浏览器完成。</p>
+      <textarea id="rawInput" placeholder="例如：&#10;张三 110101199001011234 13800138000&#10;李四 110101199001011235 13800138001&#10;二层A1区 票价380&#10;&#10;王五&#10;身份证：110101199001011236&#10;电话：13800138002"></textarea>
+      <div class="notice" id="notice1"></div>
+      <div class="actions">
+        <button class="primary" id="toAiBtn" type="button">下一步：AI 整理格式</button>
+        <button class="secondary" id="skipAiBtn" type="button">跳过 AI，直接拆分</button>
+      </div>
+    </section>
+
+    <!-- 步骤 2 -->
+    <section class="panel" id="panel2">
+      <h2>核对 AI 整理结果</h2>
+      <p class="hint">AI 只负责调整排版格式，原则上不改动内容，但<strong>无法百分之百保证不出错</strong>——证件号、手机号是否一字不差，以第 3/4 步的代码校验和你的人工核对为准。左边是你的原文，右边是整理结果——右边可以直接手改，确认无误后进入拆分。</p>
+      <div class="compare">
+        <div>
+          <p class="col-label">原文（只读）</p>
+          <pre class="raw-view" id="rawView"></pre>
+        </div>
+        <div>
+          <p class="col-label">AI 整理结果（可编辑）</p>
+          <textarea id="normalizedInput"></textarea>
+        </div>
+      </div>
+      <div class="notice" id="notice2"></div>
+      <div class="actions">
+        <button class="ghost" id="backTo1Btn" type="button">← 返回上一步</button>
+        <button class="secondary" id="redoAiBtn" type="button">重新整理</button>
+        <span class="spacer"></span>
+        <button class="primary" id="toParseBtn" type="button">下一步：正则拆分</button>
+      </div>
+    </section>
+
+    <!-- 步骤 3 -->
+    <section class="panel" id="panel3">
+      <h2>拆分结果（可逐行修改）</h2>
+      <p class="hint">直接点击单元格修改内容；红色底的格子是校验没通过的字段。「上一组 / 下一组」调整单个人属于哪伙人；每组小计行上的「整组上移 / 整组下移」可以把一整伙人挪到任意位置。又有人发信息来了？点左下角「追加下一批人」，现有表格会原样保留。</p>
+      <div class="table-meta" id="tableMeta"></div>
+      <div class="table-wrap" id="editTableWrap"></div>
+      <div class="notice" id="notice3"></div>
+      <div class="actions">
+        <button class="secondary" id="appendBatchBtn" type="button">＋ 追加下一批人</button>
+        <span class="spacer"></span>
+        <button class="primary" id="toPreviewBtn" type="button">下一步：生成模板预览</button>
+      </div>
+    </section>
+
+    <!-- 步骤 4 -->
+    <section class="panel" id="panel4">
+      <h2>购票模板预览</h2>
+      <p class="hint">以下就是导出到 <code>购票模板.xlsx</code> 的最终内容（含每组小计、总人数、总合计）。建议先让 AI 对照原文做一次最终检查，再导出。</p>
+      <div class="table-wrap" id="previewTableWrap"></div>
+      <div class="audit-box" id="auditBox"></div>
+      <div class="filename-row">
+        <label for="exportNameInput">导出文件名</label>
+        <input id="exportNameInput" type="text" />
+      </div>
+      <div class="notice" id="notice4"></div>
+      <div class="actions">
+        <button class="ghost" id="backTo3Btn" type="button">← 返回修改</button>
+        <span class="spacer"></span>
+        <button class="secondary" id="auditBtn" type="button">AI 最终检查</button>
+        <button class="primary" id="exportBtn" type="button">导出 Excel</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ExcelJS 改为本地托管：第三方 CDN 脚本可读取页面全部个人信息，不再引入 -->
+  <script src="../vendor/exceljs.min.js"></script>
+  <script src="../../config/ai.config.js"></script>
+  <script src="../shared/ai-auth.js"></script>
+  <script src="../shared/ai-progress.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>

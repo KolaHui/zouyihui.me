@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#101914" />
+  <title>比赛日控制台</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --pitch: #101914;
+      --pitch-2: #17231c;
+      --paper: #f3f0e7;
+      --paper-2: #ebe6d9;
+      --card: #fffdf7;
+      --ink: #142019;
+      --muted: #657069;
+      --line: #d8d7cc;
+      --lime: #ccff38;
+      --lime-ink: #1a2a0c;
+      --orange: #ff7048;
+      --blue: #2775ff;
+      --danger: #bd2c24;
+      --ok: #217a45;
+      --shadow: 0 18px 60px rgba(14, 24, 18, 0.13);
+      --display: "DIN Condensed", "Avenir Next Condensed", "PingFang SC", sans-serif;
+      --body: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--pitch); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--body);
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .48; }
+    [hidden], .hidden { display: none !important; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .login-screen {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(420px, .92fr);
+      background: var(--pitch);
+      color: #f6f5eb;
+      overflow: hidden;
+    }
+    .login-visual {
+      min-height: 100vh;
+      position: relative;
+      padding: clamp(34px, 6vw, 88px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      isolation: isolate;
+    }
+    .login-visual::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(circle at 18% 16%, rgba(204, 255, 56, .13), transparent 25%),
+        linear-gradient(115deg, transparent 49.7%, rgba(255,255,255,.06) 50%, transparent 50.3%),
+        repeating-linear-gradient(90deg, transparent 0 78px, rgba(255,255,255,.025) 79px 80px);
+    }
+    .login-visual::after {
+      content: "";
+      position: absolute;
+      width: min(60vw, 700px);
+      aspect-ratio: 1;
+      right: -34%;
+      top: 17%;
+      z-index: -1;
+      border: 1px solid rgba(204, 255, 56, .32);
+      border-radius: 50%;
+      box-shadow: 0 0 0 90px rgba(204,255,56,.018), 0 0 0 180px rgba(204,255,56,.012);
+    }
+    .wordmark {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      color: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .wordmark-mark {
+      width: 34px;
+      height: 34px;
+      border: 2px solid var(--lime);
+      border-radius: 50%;
+      position: relative;
+    }
+    .wordmark-mark::before,
+    .wordmark-mark::after {
+      content: "";
+      position: absolute;
+      background: var(--lime);
+    }
+    .wordmark-mark::before { width: 2px; height: 100%; left: 50%; top: 0; }
+    .wordmark-mark::after { width: 8px; height: 8px; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+    .login-copy { max-width: 720px; }
+    .login-kicker {
+      color: var(--lime);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .login-copy h1 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(58px, 8.5vw, 132px);
+      font-weight: 900;
+      letter-spacing: -.055em;
+      line-height: .82;
+      text-transform: uppercase;
+    }
+    .login-copy h1 span { display: block; color: var(--lime); }
+    .login-copy p {
+      max-width: 540px;
+      margin: 28px 0 0;
+      color: rgba(246,245,235,.64);
+      line-height: 1.8;
+      font-size: 15px;
+    }
+    .login-foot { color: rgba(246,245,235,.42); font-size: 12px; letter-spacing: .04em; }
+
+    .login-panel {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 32px clamp(24px, 6vw, 88px);
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 34px 0 0 34px;
+    }
+    .login-card { width: min(100%, 460px); }
+    .step-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .step-label::before { content: ""; width: 24px; height: 3px; background: var(--orange); }
+    .login-card h2 {
+      margin: 0 0 9px;
+      font-family: var(--display);
+      font-size: clamp(38px, 5vw, 58px);
+      letter-spacing: -.04em;
+      line-height: .95;
+    }
+    .login-card > p { color: var(--muted); margin: 0 0 30px; line-height: 1.7; }
+    .credential-hint {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin: 0 0 20px;
+      padding: 12px 14px;
+      border: 1px dashed #a5a99e;
+      border-radius: 10px;
+      background: rgba(255,255,255,.45);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .credential-hint code { color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; }
+
+    .field { display: grid; gap: 7px; }
+    .field + .field { margin-top: 16px; }
+    .field > span,
+    .field-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .03em;
+    }
+    input, textarea, select {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px 13px;
+      background: #fffefa;
+      color: var(--ink);
+      outline: none;
+      font-size: 16px;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+    textarea { min-height: 94px; resize: vertical; line-height: 1.65; }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(39, 117, 255, .13);
+      background: white;
+    }
+    input[aria-invalid="true"], textarea[aria-invalid="true"] {
+      border-color: #d76558;
+      background: #fff7f4;
+      box-shadow: 0 0 0 3px rgba(189, 44, 36, .1);
+    }
+    input[data-warning="true"], select[data-warning="true"] {
+      border-color: #c47b18;
+      background: #fff9ec;
+      box-shadow: 0 0 0 3px rgba(196, 123, 24, .1);
+    }
+    #usernameInput {
+      position: relative;
+      z-index: 1;
+      pointer-events: auto;
+      touch-action: manipulation;
+      cursor: text;
+    }
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 68px; }
+    .text-action {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      border: 0;
+      background: transparent;
+      color: var(--blue);
+      padding: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .primary-button,
+    .secondary-button,
+    .quiet-button,
+    .danger-button {
+      min-height: 44px;
+      border: 0;
+      border-radius: 9px;
+      padding: 11px 17px;
+      font-size: 14px;
+      font-weight: 800;
+      transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
+    }
+    .primary-button { background: var(--lime); color: var(--lime-ink); box-shadow: 0 8px 22px rgba(151, 193, 30, .22); }
+    .primary-button.dark { background: var(--pitch); color: white; box-shadow: none; }
+    .secondary-button { background: white; color: var(--ink); border: 1px solid var(--line); }
+    .quiet-button { background: transparent; color: var(--muted); }
+    .danger-button { background: #fff0ed; color: var(--danger); }
+    .primary-button:hover:not(:disabled), .secondary-button:hover:not(:disabled), .quiet-button:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(.98); }
+    .wide-button { width: 100%; margin-top: 24px; }
+    .button-row { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+    .status-message {
+      min-height: 20px;
+      margin-top: 13px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .status-message.error { color: var(--danger); }
+    .status-message.ok { color: var(--ok); }
+    .retry-session { width: 100%; margin-top: 10px; }
+
+    .app-shell { min-height: 100vh; background: var(--paper); }
+    .topbar {
+      position: sticky;
+      z-index: 40;
+      top: 0;
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 12px 24px;
+      background: rgba(16, 25, 20, .96);
+      color: white;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(18px);
+    }
+    .topbar-left, .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .topbar .wordmark-mark { width: 30px; height: 30px; }
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      color: rgba(255,255,255,.7);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+    }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #8c978f; }
+    .live-pill.online .live-dot { background: var(--lime); box-shadow: 0 0 0 4px rgba(204,255,56,.12); animation: pulse 2s infinite; }
+    .live-pill.online { color: var(--lime); }
+    @keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(204,255,56,0); } }
+    .admin-name { color: rgba(255,255,255,.72); font-size: 13px; }
+    .topbar .quiet-button { color: rgba(255,255,255,.76); }
+
+    .security-banner {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 24px;
+      background: var(--orange);
+      color: #2d130c;
+    }
+    .security-icon {
+      width: 31px;
+      height: 31px;
+      display: grid;
+      place-items: center;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      font-weight: 900;
+    }
+    .security-banner strong { display: block; font-size: 14px; }
+    .security-banner p { margin: 2px 0 0; font-size: 12px; opacity: .76; }
+    .security-banner button { border: 1px solid rgba(45,19,12,.35); background: rgba(255,255,255,.22); color: inherit; }
+
+    .workspace {
+      max-width: 1560px;
+      margin: 0 auto;
+      padding: 22px 24px 48px;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 20px;
+    }
+    .side-panel {
+      min-width: 0;
+      align-self: start;
+      position: sticky;
+      top: 90px;
+      display: grid;
+      gap: 14px;
+    }
+    .side-intro {
+      padding: 21px;
+      border-radius: 16px;
+      background: var(--pitch);
+      color: white;
+      overflow: hidden;
+      position: relative;
+    }
+    .side-intro::after {
+      content: "";
+      position: absolute;
+      width: 104px;
+      height: 104px;
+      right: -36px;
+      bottom: -42px;
+      border: 14px solid rgba(204,255,56,.12);
+      border-radius: 50%;
+    }
+    .side-intro span { color: var(--lime); font-size: 11px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
+    .side-intro h1 { margin: 8px 0 7px; font-family: var(--display); font-size: 32px; line-height: 1; letter-spacing: -.035em; }
+    .side-intro p { margin: 0; color: rgba(255,255,255,.55); font-size: 12px; line-height: 1.6; }
+    .side-actions { display: flex; gap: 8px; }
+    .side-actions button { flex: 1; }
+    .event-list {
+      max-height: calc(100vh - 300px);
+      overflow-y: auto;
+      display: grid;
+      gap: 8px;
+      padding-right: 3px;
+    }
+    .event-item {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 42px minmax(0,1fr) auto;
+      gap: 11px;
+      align-items: center;
+      padding: 11px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--ink);
+      text-align: left;
+    }
+    .event-item:hover { background: rgba(255,255,255,.55); }
+    .event-item.active { background: white; border-color: var(--line); box-shadow: 0 8px 25px rgba(18,32,23,.07); }
+    .date-tile {
+      width: 42px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      border-radius: 8px;
+      background: var(--paper-2);
+      line-height: 1;
+    }
+    .date-tile b { font-family: var(--display); font-size: 20px; }
+    .date-tile small { margin-top: 3px; color: var(--muted); font-size: 9px; letter-spacing: .08em; }
+    .event-item.active .date-tile { background: var(--lime); }
+    .event-item-copy { min-width: 0; }
+    .event-item-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 800; }
+    .event-item-meta { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 8px;
+      background: #e7e5de;
+      color: #667069;
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .status-badge.published, .status-badge.open { background: #e1f6df; color: #216c3e; }
+    .status-badge.closed { background: #eee6e1; color: #725d52; }
+    .status-badge.draft { background: #fff0cc; color: #825c05; }
+    .empty-side { padding: 24px 12px; color: var(--muted); text-align: center; font-size: 12px; line-height: 1.7; }
+
+    .main-panel { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+    .empty-state {
+      min-height: 420px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border: 1px dashed #b8b9b0;
+      border-radius: 18px;
+      background: rgba(255,255,255,.35);
+      padding: 36px;
+    }
+    .empty-state-mark {
+      width: 78px;
+      height: 78px;
+      margin: 0 auto 18px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      position: relative;
+    }
+    .empty-state-mark::before { content: "+"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 42px; font-weight: 300; }
+    .empty-state h2 { margin: 0; font-family: var(--display); font-size: 35px; }
+    .empty-state p { max-width: 400px; margin: 9px auto 20px; color: var(--muted); line-height: 1.7; }
+
+    .event-hero {
+      position: relative;
+      min-height: 216px;
+      overflow: hidden;
+      border-radius: 18px;
+      padding: clamp(22px, 4vw, 38px);
+      display: grid;
+      grid-template-columns: minmax(0,1fr) auto;
+      gap: 20px;
+      align-items: end;
+      background: var(--pitch);
+      color: white;
+      box-shadow: var(--shadow);
+    }
+    .event-hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(204,255,56,.04) 1px, transparent 1px) 0 0 / 58px 58px,
+        linear-gradient(rgba(204,255,56,.035) 1px, transparent 1px) 0 0 / 58px 58px,
+        radial-gradient(circle at 85% 42%, rgba(204,255,56,.18), transparent 27%);
+    }
+    .hero-content { position: relative; min-width: 0; }
+    .hero-overline { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: var(--lime); font-size: 11px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
+    .hero-overline::before { content: ""; width: 28px; height: 3px; background: currentColor; }
+    .event-hero h2 { max-width: 840px; margin: 0; overflow-wrap: anywhere; font-family: var(--display); font-size: clamp(38px, 5vw, 68px); line-height: .92; letter-spacing: -.045em; }
+    .event-hero-meta { display: flex; flex-wrap: wrap; gap: 11px 20px; margin-top: 16px; color: rgba(255,255,255,.6); font-size: 12px; }
+    .hero-score {
+      position: relative;
+      min-width: 130px;
+      padding: 15px 18px;
+      border: 1px solid rgba(204,255,56,.28);
+      border-radius: 12px;
+      background: rgba(7,12,9,.52);
+      text-align: right;
+    }
+    .hero-score b { display: block; color: var(--lime); font-family: var(--display); font-size: 44px; line-height: .9; }
+    .hero-score small { color: rgba(255,255,255,.48); font-size: 10px; letter-spacing: .12em; }
+
+    .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 11px; }
+    .metric-card {
+      min-width: 0;
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(255,255,255,.68);
+    }
+    .metric-card span { color: var(--muted); font-size: 11px; font-weight: 700; }
+    .metric-card b { display: block; margin-top: 7px; overflow: hidden; text-overflow: ellipsis; font-family: var(--display); font-size: 30px; line-height: 1; letter-spacing: -.025em; }
+    .metric-card.accent { background: var(--lime); border-color: var(--lime); }
+    .metric-card.accent span { color: rgba(26,42,12,.64); }
+
+    .panel-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      box-shadow: 0 8px 34px rgba(18,32,23,.055);
+    }
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 20px 21px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel-head h3 { margin: 0; font-family: var(--display); font-size: 25px; letter-spacing: -.025em; }
+    .panel-head p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .panel-body { padding: 21px; }
+    .form-grid { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 15px; }
+    .span-12 { grid-column: span 12; }
+    .span-8 { grid-column: span 8; }
+    .span-6 { grid-column: span 6; }
+    .span-4 { grid-column: span 4; }
+    .span-3 { grid-column: span 3; }
+    .form-grid .field + .field { margin-top: 0; }
+    .form-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 19px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .form-note { color: var(--muted); font-size: 12px; line-height: 1.6; }
+
+    .publish-strip {
+      display: grid;
+      grid-template-columns: auto minmax(0,1fr) auto;
+      align-items: center;
+      gap: 13px;
+      padding: 15px 17px;
+      border-radius: 12px;
+      background: #eef0e9;
+    }
+    .publish-strip.active { background: #e5f7d2; }
+    .publish-symbol { width: 33px; height: 33px; display: grid; place-items: center; border-radius: 50%; background: white; font-weight: 900; }
+    .publish-copy { min-width: 0; }
+    .publish-copy strong { display: block; font-size: 13px; }
+    .public-link { display: block; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
+
+    .records-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #faf8f1;
+    }
+    .records-meta { display: flex; flex-wrap: wrap; gap: 8px 17px; color: var(--muted); font-size: 12px; }
+    .records-meta strong { color: var(--ink); }
+    .table-scroll { width: 100%; overflow: auto; max-height: 66vh; overscroll-behavior: contain; }
+    .data-table { width: 100%; min-width: 1040px; border-collapse: separate; border-spacing: 0; }
+    .data-table th {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      padding: 11px 8px;
+      border-bottom: 1px solid var(--line);
+      background: #efede5;
+      color: #6a716b;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .045em;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .data-table td { padding: 6px 5px; border-bottom: 1px solid #ebe9e0; background: #fffdf7; vertical-align: middle; }
+    .data-table tr:hover td { background: #fffcf0; }
+    .data-table th:first-child,
+    .data-table tbody tr:not(.group-row) td:first-child { position: sticky; left: 0; z-index: 3; text-align: center; }
+    .data-table th:first-child { z-index: 7; width: 44px; min-width: 44px; background: #e7e5dd; }
+    .data-table tbody tr:not(.group-row) td:first-child { width: 44px; min-width: 44px; background: #f5f2e9; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+    .data-table th:nth-child(2),
+    .data-table tbody tr:not(.group-row) td:nth-child(2) {
+      position: sticky;
+      left: 44px;
+      z-index: 3;
+      background: #fffdf7;
+      box-shadow: 7px 0 12px -12px rgba(20,32,25,.7);
+    }
+    .data-table th:nth-child(2) { z-index: 6; background: #efede5; }
+    .data-table tr:not(.group-row):hover td:nth-child(2) { background: #fffcf0; }
+    .table-input, .table-select {
+      min-height: 44px;
+      border-color: transparent;
+      border-radius: 7px;
+      padding: 7px 8px;
+      background: transparent;
+      font-size: 14px;
+    }
+    .table-input:hover, .table-select:hover { border-color: var(--line); background: white; }
+    .table-input:focus, .table-select:focus { border-color: var(--blue); background: white; }
+    .table-input.dirty, .table-select.dirty { background: #fff4c7; border-color: #e1bf54; }
+    .table-input.invalid, .table-select.invalid { background: #fff0ed; border-color: #e7a39a; }
+    .w-phone { width: 132px; }
+    .w-name { width: 92px; }
+    .w-document { width: 90px; }
+    .w-id { width: 196px; }
+    .w-money { width: 104px; }
+    .w-position { width: 148px; }
+    .w-note { width: 190px; }
+    .w-group { width: 62px; }
+    .row-delete { border: 0; background: transparent; color: #a54a40; padding: 7px; font-size: 12px; }
+    .group-row td { padding: 9px 12px; background: #f1f0e8 !important; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .table-empty { padding: 54px 24px; color: var(--muted); text-align: center; font-size: 13px; line-height: 1.7; }
+    .table-foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+    }
+    .save-indicator { color: var(--muted); font-size: 12px; }
+    .save-indicator.dirty { color: #8b6205; }
+
+    .modal-backdrop {
+      position: fixed;
+      z-index: 100;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(6, 12, 8, .68);
+      backdrop-filter: blur(8px);
+    }
+    .modal {
+      width: min(100%, 520px);
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      border-radius: 18px;
+      background: var(--card);
+      box-shadow: 0 30px 100px rgba(0,0,0,.3);
+      animation: modal-in 180ms ease both;
+    }
+    @keyframes modal-in { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+    .modal-head { display: flex; justify-content: space-between; gap: 20px; padding: 21px; border-bottom: 1px solid var(--line); }
+    .modal-head h3 { margin: 0; font-family: var(--display); font-size: 28px; }
+    .modal-head p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .modal-close { width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--paper-2); color: var(--ink); font-size: 21px; }
+    .modal-body { padding: 21px; }
+
+    .toast-region { position: fixed; z-index: 200; right: 20px; bottom: 20px; display: grid; gap: 9px; width: min(360px, calc(100vw - 40px)); }
+    .toast { padding: 13px 15px; border-radius: 10px; background: var(--pitch); color: white; box-shadow: var(--shadow); font-size: 13px; line-height: 1.55; animation: toast-in 200ms ease both; }
+    .toast.ok { border-left: 4px solid var(--lime); }
+    .toast.error { border-left: 4px solid var(--orange); }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(9px); } }
+
+    @media (max-width: 1040px) {
+      .workspace { grid-template-columns: 230px minmax(0,1fr); }
+      .metric-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .span-3 { grid-column: span 6; }
+    }
+    @media (max-width: 820px) {
+      .login-screen { grid-template-columns: 1fr; }
+      .login-visual { min-height: 38vh; padding: 30px 24px; }
+      .login-copy h1 { font-size: clamp(52px, 16vw, 86px); }
+      .login-copy p, .login-foot { display: none; }
+      .login-panel { min-height: 62vh; padding: 34px 24px 44px; border-radius: 28px 28px 0 0; }
+      .workspace { grid-template-columns: 1fr; padding: 16px 14px 36px; }
+      .side-panel { position: static; }
+      .side-intro { display: none; }
+      .event-list { max-height: none; display: flex; overflow-x: auto; padding: 2px 0 8px; scroll-snap-type: x proximity; }
+      .event-item { min-width: 250px; scroll-snap-align: start; background: rgba(255,255,255,.55); }
+      .event-hero { min-height: 230px; grid-template-columns: 1fr; }
+      .hero-score { position: absolute; right: 20px; top: 20px; }
+      .event-hero h2 { padding-right: 110px; font-size: clamp(36px, 10vw, 54px); }
+      .span-8, .span-6, .span-4, .span-3 { grid-column: span 12; }
+    }
+    @media (max-width: 560px) {
+      .topbar { padding: 10px 14px; }
+      .topbar .wordmark > span:last-child, .admin-name { display: none; }
+      .security-banner { grid-template-columns: auto 1fr; padding: 12px 14px; }
+      .security-banner button { grid-column: 1 / -1; width: 100%; }
+      .side-actions { position: sticky; z-index: 20; top: 65px; padding: 6px 0; background: var(--paper); }
+      .event-hero { padding: 22px 18px; }
+      .event-hero h2 { padding-right: 0; margin-top: 74px; }
+      .hero-score { left: 18px; right: auto; top: 18px; text-align: left; }
+      .metric-grid { grid-template-columns: 1fr 1fr; }
+      .metric-card { padding: 14px; }
+      .panel-head { display: grid; padding: 17px; }
+      .panel-body { padding: 17px; }
+      .publish-strip { grid-template-columns: auto 1fr; }
+      .publish-strip .button-row { grid-column: 1 / -1; }
+      .records-toolbar, .table-foot { align-items: stretch; }
+      .records-toolbar .button-row, .table-foot .button-row { width: 100%; }
+      .records-toolbar button, .table-foot button { flex: 1; }
+      .toast-region { right: 12px; bottom: 12px; width: calc(100vw - 24px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main id="loginScreen" class="login-screen">
+    <section class="login-visual" aria-label="比赛日控制台介绍">
+      <div class="wordmark"><span class="wordmark-mark" aria-hidden="true"></span><span>ZOUYIHUI · MATCH OPS</span></div>
+      <div class="login-copy">
+        <div class="login-kicker">Matchday collection system</div>
+        <h1>比赛日<span>控制台</span></h1>
+        <p>定制一场比赛的信息收集页，发布给购票人填写；所有规范数据实时进入安全数据库，可直接核对、修订与汇总。</p>
+      </div>
+      <div class="login-foot">PRIVATE OPERATIONS · AUTHORIZED ACCESS ONLY</div>
+    </section>
+    <section class="login-panel">
+      <form id="loginForm" class="login-card" autocomplete="on">
+        <div class="step-label">管理员入口</div>
+        <h2>登录控制台</h2>
+        <p>使用管理员账号进入。首次测试后，请立即修改初始密码。</p>
+        <div class="credential-hint"><span>首次请在本机打开管理页并修改密码</span><code>已按约定配置</code></div>
+        <label class="field" for="usernameInput">
+          <span>管理员账号</span>
+          <input id="usernameInput" name="username" type="text" autocomplete="username" inputmode="text" placeholder="输入账号" required />
+        </label>
+        <label class="field">
+          <span>管理员密码</span>
+          <span class="password-wrap">
+            <input id="passwordInput" name="password" type="password" autocomplete="current-password" placeholder="输入密码" required />
+            <button class="text-action" type="button" data-toggle-password="passwordInput">显示</button>
+          </span>
+        </label>
+        <button id="loginBtn" class="primary-button dark wide-button" type="submit">进入比赛日控制台</button>
+        <div id="loginStatus" class="status-message" role="status" aria-live="polite"></div>
+        <button id="retrySessionBtn" class="secondary-button retry-session" type="button" hidden>重试连接当前主机</button>
+      </form>
+    </section>
+  </main>
+
+  <main id="appShell" class="app-shell" hidden>
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="wordmark"><span class="wordmark-mark" aria-hidden="true"></span><span>比赛日控制台</span></div>
+        <div id="connectionPill" class="live-pill"><span class="live-dot"></span><span id="connectionText">连接中</span></div>
+      </div>
+      <div class="topbar-right">
+        <span id="adminName" class="admin-name">管理员</span>
+        <button id="logoutBtn" class="quiet-button" type="button">退出</button>
+      </div>
+    </header>
+
+    <section id="securityBanner" class="security-banner" hidden>
+      <span class="security-icon" aria-hidden="true">!</span>
+      <div><strong>正在使用初始密码</strong><p>为了保护购票人证件与手机号，请先修改管理员密码。</p></div>
+      <button id="openPasswordBtn" class="secondary-button" type="button">现在修改</button>
+    </section>
+
+    <div class="workspace">
+      <aside class="side-panel">
+        <div class="side-intro">
+          <span>Operations desk</span>
+          <h1>赛程与收集页</h1>
+          <p>一场比赛对应一个公开填写页面。</p>
+        </div>
+        <div class="side-actions">
+          <button id="newEventBtn" class="primary-button" type="button">＋ 新建比赛</button>
+          <button id="refreshEventsBtn" class="secondary-button" type="button" aria-label="刷新比赛列表">刷新</button>
+        </div>
+        <nav id="eventList" class="event-list" aria-label="比赛列表"></nav>
+      </aside>
+
+      <section class="main-panel">
+        <div id="noEventState" class="empty-state">
+          <div>
+            <div class="empty-state-mark" aria-hidden="true"></div>
+            <h2>先建立一场比赛</h2>
+            <p>只需确认公开页标题，即可发布购票需求填写链接。</p>
+            <button id="emptyCreateBtn" class="primary-button dark" type="button">创建第一场比赛</button>
+          </div>
+        </div>
+
+        <div id="eventWorkspace" class="main-panel" hidden>
+          <section class="event-hero">
+            <div class="hero-content">
+              <div id="heroStatus" class="hero-overline">草稿</div>
+              <h2 id="heroTitle">明日足球赛</h2>
+              <div class="event-hero-meta">
+                <span>购票需求收集</span>
+                <span>票价与位置由填写人提供</span>
+              </div>
+            </div>
+            <div class="hero-score"><b id="heroCount">0</b><small>已登记人数</small></div>
+          </section>
+
+          <section class="metric-grid" aria-label="实时汇总">
+            <div class="metric-card accent"><span>登记人数</span><b id="metricPeople">0</b></div>
+            <div class="metric-card"><span>填写批次</span><b id="metricBatches">0</b></div>
+            <div class="metric-card"><span>分组数量</span><b id="metricGroups">0</b></div>
+            <div class="metric-card"><span>意向票款合计</span><b id="metricAmount">¥0</b></div>
+          </section>
+
+          <section class="panel-card">
+            <header class="panel-head">
+              <div><h3>收集页标题</h3><p>管理员只控制标题；票价、位置和备注由购票人按自己的需求填写。</p></div>
+              <span id="eventStatusBadge" class="status-badge draft">草稿</span>
+            </header>
+            <div class="panel-body">
+              <form id="eventForm">
+                <div class="form-grid">
+                  <label class="field span-12"><span>公开页标题</span><input id="eventTitleInput" name="title" maxlength="80" placeholder="例如：8月11日足球赛购票需求登记" required /></label>
+                </div>
+                <div class="form-actions">
+                  <span class="form-note">保存标题不会自动公开；点击发布后，用户链接才开始收集。</span>
+                  <div class="button-row">
+                    <button id="closeEventBtn" class="danger-button" type="button" hidden>停止收集</button>
+                    <button id="saveEventBtn" class="secondary-button" type="submit">保存标题</button>
+                    <button id="publishEventBtn" class="primary-button dark" type="button">发布收集页</button>
+                  </div>
+                </div>
+              </form>
+              <div id="eventFormStatus" class="status-message" role="status" aria-live="polite"></div>
+            </div>
+          </section>
+
+          <section class="panel-card">
+            <div class="panel-body">
+              <div id="publishStrip" class="publish-strip">
+                <span id="publishSymbol" class="publish-symbol">—</span>
+                <div class="publish-copy"><strong id="publishLabel">尚未发布</strong><span id="publicLinkText" class="public-link">发布后会生成公开填写链接</span></div>
+                <div class="button-row">
+                  <button id="openPublicBtn" class="secondary-button" type="button" disabled>预览页面</button>
+                  <button id="copyPublicBtn" class="primary-button" type="button" disabled>复制链接</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel-card">
+            <header class="panel-head">
+              <div><h3>购票需求 · 可修改预览表</h3><p>保留姓名、证件类型与号码、手机号、想要票价、想要位置和备注；修改后统一保存。</p></div>
+              <div class="button-row">
+                <button id="exportExcelBtn" class="secondary-button" type="button">导出购票模板</button>
+                <button id="refreshRecordsBtn" class="primary-button dark" type="button">刷新数据</button>
+              </div>
+            </header>
+            <div class="records-toolbar">
+              <div class="records-meta">
+                <span>最后同步：<strong id="lastSyncText">尚未同步</strong></span>
+                <span>自动刷新：<strong>30 秒</strong></span>
+                <span id="recordsHint">可横向滚动查看全部购票字段</span>
+              </div>
+              <div class="button-row">
+                <button id="addRowBtn" class="secondary-button" type="button">＋ 补录一人</button>
+              </div>
+            </div>
+            <div id="recordsTableWrap" class="table-scroll"></div>
+            <footer class="table-foot">
+              <span id="saveIndicator" class="save-indicator">暂无未保存修改</span>
+              <div class="button-row">
+                <button id="discardRowsBtn" class="quiet-button" type="button" disabled>放弃修改</button>
+                <button id="saveRowsBtn" class="primary-button dark" type="button" disabled>保存表格修改</button>
+              </div>
+            </footer>
+          </section>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="eventModal" class="modal-backdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
+      <header class="modal-head"><div><h3 id="eventModalTitle">新建比赛</h3><p>只需设置公开页标题，建立后再决定何时发布。</p></div><button class="modal-close" type="button" data-close-modal="eventModal" aria-label="关闭">×</button></header>
+      <form id="createEventForm" class="modal-body">
+        <label class="field"><span>公开页标题</span><input id="createTitleInput" maxlength="80" placeholder="例如：8月11日足球赛购票需求登记" required /></label>
+        <div class="button-row" style="justify-content:flex-end; margin-top:22px">
+          <button class="secondary-button" type="button" data-close-modal="eventModal">取消</button>
+          <button id="createEventSubmitBtn" class="primary-button dark" type="submit">建立比赛</button>
+        </div>
+        <div id="createEventStatus" class="status-message" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+  </div>
+
+  <div id="addRowModal" class="modal-backdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="addRowModalTitle">
+      <header class="modal-head"><div><h3 id="addRowModalTitle">补录一位购票人</h3><p>补录会直接写入当前比赛，保存后自动刷新名单。</p></div><button class="modal-close" type="button" data-close-modal="addRowModal" aria-label="关闭">×</button></header>
+      <form id="addRowForm" class="modal-body" novalidate>
+        <div class="form-grid">
+          <label class="field span-6"><span>姓名</span><input id="addNameInput" maxlength="100" autocomplete="off" required /></label>
+          <label class="field span-6"><span>手机号</span><input id="addPhoneInput" type="tel" inputmode="numeric" maxlength="32" autocomplete="off" placeholder="11 位手机号" required /></label>
+          <label class="field span-6"><span>证件类型</span><select id="addDocumentTypeInput"><option value="身份证">身份证</option><option value="护照">护照</option></select></label>
+          <label class="field span-6"><span>证件号码</span><input id="addIdcardInput" inputmode="text" maxlength="32" autocapitalize="characters" autocomplete="off" placeholder="身份证或护照号码" required /></label>
+          <label class="field span-6"><span>想要票价</span><input id="addPriceInput" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="纯数字，例如 580" required /></label>
+          <label class="field span-6"><span>想要位置</span><input id="addPositionInput" maxlength="200" autocomplete="off" placeholder="例如 二层 C3 区" required /></label>
+          <label class="field span-12"><span>备注（选填）</span><textarea id="addExtraInput" maxlength="2000" placeholder="这位购票人的其他说明"></textarea></label>
+        </div>
+        <div class="button-row" style="justify-content:flex-end; margin-top:22px">
+          <button class="secondary-button" type="button" data-close-modal="addRowModal">取消</button>
+          <button id="addRowSubmitBtn" class="primary-button dark" type="submit">确认补录</button>
+        </div>
+        <div id="addRowStatus" class="status-message" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+  </div>
+
+  <div id="passwordModal" class="modal-backdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
+      <header class="modal-head"><div><h3 id="passwordModalTitle">修改管理员密码</h3><p>新密码会用于下次登录，请妥善保存。</p></div><button class="modal-close" type="button" data-close-modal="passwordModal" data-password-dismiss aria-label="关闭">×</button></header>
+      <form id="passwordForm" class="modal-body">
+        <label class="field"><span>当前密码</span><input id="currentPasswordInput" type="password" autocomplete="current-password" required /></label>
+        <label class="field"><span>新密码</span><input id="newPasswordInput" type="password" autocomplete="new-password" minlength="8" required /></label>
+        <label class="field"><span>确认新密码</span><input id="confirmPasswordInput" type="password" autocomplete="new-password" minlength="8" required /></label>
+        <div class="button-row" style="justify-content:flex-end; margin-top:22px">
+          <button id="passwordCancelBtn" class="secondary-button" type="button" data-close-modal="passwordModal" data-password-dismiss>稍后修改</button>
+          <button id="passwordSubmitBtn" class="primary-button dark" type="submit">确认修改</button>
+        </div>
+        <div id="passwordStatus" class="status-message" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+  </div>
+
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="../vendor/exceljs.min.js"></script>
+  <script src="../shared/ticket-template-export.js"></script>
+  <script src="../../config/portal.config.js"></script>
+  <script src="./admin.js?v=20260811-username-tap"></script>
+</body>
+</html>
