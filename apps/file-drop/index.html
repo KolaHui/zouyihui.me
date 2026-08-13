@@ -261,8 +261,7 @@
   <script>
     (() => {
       const apiBase = String(window.AI_API_BASE_URL || "").replace(/\/$/, "");
-      const uploadUrl = (token, relPath) =>
-        `${apiBase}/api/upload?token=${encodeURIComponent(token)}&path=${encodeURIComponent(relPath)}`;
+      const uploadUrl = (relPath) => `${apiBase}/api/upload?path=${encodeURIComponent(relPath)}`;
 
       const tokenInput = document.getElementById("tokenInput");
       const dropZone = document.getElementById("dropZone");
@@ -338,7 +337,8 @@
           ring.style.strokeDashoffset = RING_LEN;
 
           const xhr = new XMLHttpRequest();
-          xhr.open("POST", uploadUrl(token, item.relPath));
+          xhr.open("POST", uploadUrl(item.relPath));
+          xhr.setRequestHeader("Authorization", `Bearer ${token}`);
           xhr.setRequestHeader("Content-Type", "application/octet-stream");
           xhr.timeout = 30 * 60 * 1000;
 

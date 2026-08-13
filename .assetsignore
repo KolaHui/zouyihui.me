@@ -1,0 +1,9 @@
+.git/
+.github/
+.wrangler/
+.DS_Store
+.assetsignore
+CNAME
+edge-gate.js
+tests/
+wrangler.jsonc
