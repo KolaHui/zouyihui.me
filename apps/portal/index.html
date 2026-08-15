@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="referrer" content="no-referrer" />
   <meta name="theme-color" content="#17382f" />
   <meta name="color-scheme" content="light" />
   <title>购票信息登记</title>
@@ -1891,7 +1892,7 @@
       <span id="pageStateText">正在读取活动信息，请稍候…</span>
     </section>
 
-    <form id="registrationForm" class="form-card" novalidate hidden>
+    <form id="registrationForm" class="form-card" autocomplete="off" novalidate hidden>
       <div class="form-intro">
         <div class="section-number">实名登记</div>
         <h2>填写购票人信息</h2>
@@ -1912,7 +1913,7 @@
           <div class="phone-helper-actions">
             <label class="field" data-shared-field-wrap="phone">
               <span class="field-label">本批统一手机号 <small>选填助手</small></span>
-              <input id="sharedPhoneInput" data-shared-field="phone" type="tel" inputmode="numeric" autocomplete="section-shared tel" maxlength="32" placeholder="请输入 11 位手机号" />
+              <input id="sharedPhoneInput" data-shared-field="phone" type="tel" inputmode="numeric" autocomplete="off" maxlength="32" placeholder="请输入 11 位手机号" />
               <span class="field-error" data-shared-error="phone" aria-live="polite"></span>
             </label>
             <button id="applySharedBtn" class="text-button" type="button" data-state="idle" aria-label="套用到所有人">
@@ -1954,7 +1955,7 @@
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 4 4L19 6"/></svg>
       </div>
       <h2 id="receiptTitle">登记成功</h2>
-      <p id="receiptMessage">信息已经安全提交，请勿重复登记。</p>
+      <p id="receiptMessage">信息已经安全提交，客户专属链接现已失效。</p>
       <div class="receipt-meta">
         <div class="receipt-item"><span>本次人数</span><strong id="receiptCount">—</strong></div>
         <div class="receipt-item"><span>提交时间</span><strong id="receiptTime">—</strong></div>
@@ -1962,7 +1963,7 @@
         <div class="receipt-item"><span>活动</span><strong id="receiptEvent">—</strong></div>
       </div>
       <p id="duplicateNote" class="duplicate-note" hidden>系统识别到这是同一次重试，已自动避免重复写入。</p>
-      <button id="registerAnotherBtn" class="again-button" type="button">继续登记另一批</button>
+      <button id="registerAnotherBtn" class="again-button" type="button" hidden>继续登记另一批</button>
     </section>
 
     <footer class="site-footer">你的信息仅用于本次购票登记，并会直接提交至活动管理员。</footer>
@@ -2084,6 +2085,6 @@
   </template>
 
   <script src="../../config/portal.config.js"></script>
-  <script src="./portal.js?v=20260811-clear-errors"></script>
+  <script src="./portal.js?v=20260815-one-time-invites"></script>
 </body>
 </html>

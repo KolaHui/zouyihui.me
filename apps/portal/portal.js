@@ -10,13 +10,18 @@
       : config.apiBaseUrl || window.AI_API_BASE_URL || window.location.origin
   ).replace(/\/$/, "");
   const portalApi = {
-    async getEvent(publicToken) {
-      return requestJson(`/api/collection/public/events/${encodeURIComponent(publicToken)}`);
+    async getEvent(inviteToken) {
+      return requestJson("/api/collection/public/invite", {
+        headers: { Authorization: `Invite ${inviteToken}` },
+      });
     },
-    async submit(publicToken, payload) {
-      return requestJson(`/api/collection/public/events/${encodeURIComponent(publicToken)}/submissions`, {
+    async submit(inviteToken, payload) {
+      return requestJson("/api/collection/public/invite/submissions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Invite ${inviteToken}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
     },
@@ -81,14 +86,16 @@
     reviewSubmitLabel: $("reviewSubmitLabel"),
   };
 
-  const query = new URLSearchParams(window.location.search);
-  // 新链接使用 event；读取 invite 是为了兼容已复制出去的旧参数形式。
-  const publicToken = String(query.get("event") || query.get("invite") || "").trim();
+  // 邀请令牌放在 URL fragment 中：浏览器不会把 #invite 后的内容发送给
+  // GitHub Pages、Referer 或普通访问日志。令牌只通过 Authorization 请求头交给 API。
+  const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const inviteToken = String(fragment.get("invite") || "").trim();
 
   let currentEvent = null;
   let nextPersonId = 1;
   let isSubmitting = false;
   let collectionStopped = false;
+  let submissionCompleted = false;
   let pendingSubmissionIdentity = null;
   let reviewSnapshot = null;
   let reviewIntroTimer = 0;
@@ -115,6 +122,9 @@
     try {
       response = await fetch(`${apiBase}${path}`, {
         ...options,
+        cache: "no-store",
+        credentials: "omit",
+        referrerPolicy: "no-referrer",
         headers: {
           Accept: "application/json",
           ...(options.headers || {}),
@@ -239,7 +249,6 @@
   function normalizeEvent(value) {
     const source = value && typeof value === "object" ? value : {};
     return {
-      public_token: normalizeString(source.public_token || publicToken),
       title: normalizeString(source.title || source.name || "购票信息登记"),
     };
   }
@@ -336,11 +345,9 @@
   }
 
   function personAutocomplete(field, personId) {
-    const token = {
-      name: "name",
-      phone: "tel",
-    }[field];
-    return token ? `section-person-${personId} ${token}` : "off";
+    void field;
+    void personId;
+    return "off";
   }
 
   function addBuyer(initialValues = {}) {
@@ -944,6 +951,25 @@
     }
   }
 
+  function clearSensitiveSubmissionState() {
+    submissionCompleted = true;
+    pendingSubmissionIdentity = null;
+    reviewSnapshot = null;
+    dom.registrationForm.reset();
+    dom.registrationForm.querySelectorAll("input, textarea").forEach((control) => {
+      control.value = "";
+    });
+    dom.buyerList.replaceChildren();
+    dom.reviewTableBody.replaceChildren();
+    dom.reviewMessage.textContent = "";
+    setSharedValue("phone", "");
+    try {
+      window.history.replaceState(null, document.title, window.location.pathname);
+    } catch (_) {
+      // 极少数旧浏览器禁止修改历史记录时，表单与内存仍会照常清空。
+    }
+  }
+
   function renderReceipt(result, fallbackCount) {
     const count = Number(result.person_count || fallbackCount || 0);
     const submittedAt = result.submitted_at || new Date().toISOString();
@@ -951,8 +977,8 @@
 
     dom.receiptTitle.textContent = duplicate ? "信息已登记" : "登记成功";
     dom.receiptMessage.textContent = duplicate
-      ? "这次请求此前已经成功提交，系统没有重复写入。"
-      : "信息已经安全提交，请保留本页回执并勿重复登记。";
+      ? "这次请求此前已经成功提交，系统没有重复写入；客户专属链接现已失效。"
+      : "信息已经安全提交，客户专属链接现已失效，请保留本页回执。";
     dom.receiptCount.textContent = `${count} 人`;
     dom.receiptTime.textContent = formatDateTime(submittedAt);
     dom.receiptGroup.textContent = normalizeString(result.group_id) || "已登记";
@@ -1017,7 +1043,7 @@
         );
       }
 
-      const result = await portalApi.submit(publicToken, payload);
+      const result = await portalApi.submit(inviteToken, payload);
       if (!result || result.ok !== true) {
         throw new PortalApiError("提交未完成，请稍后重试。", 500, result?.field_errors);
       }
@@ -1027,8 +1053,8 @@
       safeVibrate([24, 42, 58]);
       await wait(reduceMotionQuery.matches ? 90 : 680);
       closeReview({ restoreFocus: false });
+      clearSensitiveSubmissionState();
       renderReceipt(result, personCount);
-      pendingSubmissionIdentity = null;
       setSubmitting(false);
       setReviewSubmitState("idle");
     } catch (error) {
@@ -1064,7 +1090,7 @@
   }
 
   function resetForAnotherBatch() {
-    if (collectionStopped) return;
+    if (collectionStopped || submissionCompleted) return;
     pendingSubmissionIdentity = null;
     reviewSnapshot = null;
     clearAllErrors();
@@ -1112,13 +1138,13 @@
 
   async function initialize() {
     bindEvents();
-    if (!publicToken) {
-      showEventError("链接中缺少活动编号，请重新打开管理员发送的完整链接。");
+    if (!inviteToken) {
+      showEventError("客户链接不完整，请重新打开活动管理员发送的专属链接。");
       return;
     }
 
     try {
-      const payload = await portalApi.getEvent(publicToken);
+      const payload = await portalApi.getEvent(inviteToken);
       const rawEvent = payload?.event || payload?.data || payload;
       if (!rawEvent || typeof rawEvent !== "object") {
         throw new PortalApiError("没有找到该活动，请确认链接是否完整。", 404, null);
@@ -1134,6 +1160,10 @@
       showEventError(`${message}${reference}`);
     }
   }
+
+  window.addEventListener("pageshow", () => {
+    if (submissionCompleted) clearSensitiveSubmissionState();
+  });
 
   initialize();
 })();
