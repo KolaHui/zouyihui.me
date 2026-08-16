@@ -11,12 +11,12 @@
       "custom_domain": true
     },
     {
-      "pattern": "www.zouyihui.me",
-      "custom_domain": true
+      "pattern": "www.zouyihui.me/*",
+      "zone_name": "zouyihui.me"
     },
     {
-      "pattern": "zouyihui.me",
-      "custom_domain": true
+      "pattern": "zouyihui.me/*",
+      "zone_name": "zouyihui.me"
     }
   ],
   "assets": {
