@@ -37,8 +37,24 @@ async function handleRequest(request, env) {
     return loginPage({ next: safeNext(url.searchParams.get("next")) });
   }
 
+  if (url.pathname === "/__access/owner-admin" && request.method === "GET") {
+    if (!(await hasValidSession(request, env))) {
+      const loginUrl = new URL("/__access", url);
+      loginUrl.searchParams.set("next", "/__access/owner-admin");
+      return secureResponse(Response.redirect(loginUrl.toString(), 303));
+    }
+    return ownerAdminRedirect(env, url);
+  }
+
   if (request.method !== "GET" && request.method !== "HEAD") {
     return jsonResponse(405, { error: "Method not allowed" }, { Allow: "GET, HEAD" });
+  }
+
+  if (isPublicAssetPath(url.pathname)) {
+    if (!env.ASSETS || typeof env.ASSETS.fetch !== "function") {
+      return htmlResponse(503, systemUnavailablePage());
+    }
+    return securePublicAssetResponse(await env.ASSETS.fetch(request));
   }
 
   if (!(await hasValidSession(request, env))) {
@@ -163,6 +179,24 @@ async function hmacSign(secret, payload) {
   return bytesToBase64Url(new Uint8Array(signature));
 }
 
+async function ownerAdminRedirect(env, url) {
+  const secret = String(env.OWNER_BRIDGE_SECRET || "");
+  if (encoder.encode(secret).length < 32) {
+    return htmlResponse(503, systemUnavailablePage());
+  }
+  const expiresAt = Math.floor(Date.now() / 1000) + 60;
+  const nonce = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(24)));
+  const payload = `v1.${expiresAt}.${nonce}`;
+  const assertion = `${payload}.${await hmacSign(secret, payload)}`;
+  const target = new URL("/apps/admin/", url);
+  target.hash = `owner=${encodeURIComponent(assertion)}`;
+  const headers = new Headers({
+    Location: target.toString(),
+    "Cache-Control": "no-store",
+  });
+  return secureResponse(new Response(null, { status: 303, headers }));
+}
+
 async function sha256Hex(bytes) {
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -210,6 +244,16 @@ function safeNext(value) {
   return text.slice(0, 2048);
 }
 
+function isPublicAssetPath(pathname) {
+  if (pathname === "/" || pathname === "/index.html" || pathname === "/assets/mark.svg") return true;
+  if (pathname === "/config/portal.config.js") return true;
+  if (pathname === "/购票模板.xlsx") return true;
+  if (pathname === "/apps/vendor/exceljs.min.js") return true;
+  if (pathname === "/apps/shared/ticket-template-export.js") return true;
+  if (pathname === "/apps/admin" || pathname === "/apps/admin/" || pathname.startsWith("/apps/admin/")) return true;
+  return pathname === "/apps/portal" || pathname === "/apps/portal/" || pathname.startsWith("/apps/portal/");
+}
+
 function readCookie(header, name) {
   for (const part of header.split(";")) {
     const separator = part.indexOf("=");
@@ -245,6 +289,13 @@ function bytesToBase64Url(bytes) {
 function secureAssetResponse(response) {
   const headers = new Headers(response.headers);
   headers.set("Cache-Control", "private, no-store");
+  applySecurityHeaders(headers);
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
+function securePublicAssetResponse(response) {
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", "public, max-age=300, stale-while-revalidate=86400");
   applySecurityHeaders(headers);
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
@@ -302,20 +353,20 @@ function loginDocument({ error, next, nonce }) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="light">
-  <meta name="theme-color" content="#f3faf7">
-  <title>私人访问 · ZOUYIHUI.ME</title>
+  <meta name="theme-color" content="#f3fbff">
+  <title>个人空间 · ZOUYIHUI.ME</title>
   <style nonce="${nonce}">
     :root {
       color-scheme: light;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
       font-synthesis: none;
-      --ink: #17231f;
-      --muted: #697771;
-      --line: rgba(46, 86, 70, .13);
+      --ink: #10293c;
+      --muted: #6a7c88;
+      --line: rgba(42, 112, 149, .14);
       --card: rgba(255, 255, 255, .74);
-      --green: #2a8064;
-      --green-deep: #1d6850;
-      --focus: rgba(54, 142, 108, .22);
+      --green: #1b9ddf;
+      --green-deep: #0d79b8;
+      --focus: rgba(31, 157, 220, .2);
     }
     * { box-sizing: border-box; }
     html, body { min-height: 100%; }
@@ -325,9 +376,9 @@ function loginDocument({ error, next, nonce }) {
       overflow: hidden;
       color: var(--ink);
       background:
-        radial-gradient(circle at 15% 5%, rgba(206, 240, 226, .84), transparent 38%),
-        radial-gradient(circle at 88% 88%, rgba(209, 230, 249, .72), transparent 42%),
-        linear-gradient(145deg, #f8fcfa 0%, #f2f9f6 48%, #f7fafc 100%);
+        radial-gradient(circle at 15% 5%, rgba(193, 238, 245, .78), transparent 38%),
+        radial-gradient(circle at 88% 88%, rgba(205, 230, 250, .72), transparent 42%),
+        linear-gradient(145deg, #f9fdff 0%, #eef9ff 48%, #f7fcff 100%);
       -webkit-font-smoothing: antialiased;
     }
     .ambient {
@@ -346,12 +397,12 @@ function loginDocument({ error, next, nonce }) {
     }
     .orb-a {
       left: 8%; top: 5%;
-      background: rgba(172, 230, 205, .38);
+      background: rgba(112, 218, 229, .34);
       animation: drift-a 15s ease-in-out infinite alternate;
     }
     .orb-b {
       right: 4%; bottom: 3%;
-      background: rgba(171, 207, 239, .34);
+      background: rgba(114, 183, 235, .3);
       animation: drift-b 18s ease-in-out infinite alternate;
     }
     .shell {
@@ -368,7 +419,7 @@ function loginDocument({ error, next, nonce }) {
       border: 1px solid rgba(255, 255, 255, .86);
       border-radius: 28px;
       background: var(--card);
-      box-shadow: 0 26px 70px rgba(54, 88, 75, .11), 0 2px 8px rgba(54, 88, 75, .05);
+      box-shadow: 0 26px 70px rgba(43, 104, 136, .11), 0 2px 8px rgba(43, 104, 136, .05);
       backdrop-filter: blur(24px) saturate(128%);
       -webkit-backdrop-filter: blur(24px) saturate(128%);
       animation: card-in 560ms cubic-bezier(.22, 1, .36, 1) both;
@@ -378,7 +429,7 @@ function loginDocument({ error, next, nonce }) {
       align-items: center;
       gap: 9px;
       margin-bottom: 26px;
-      color: #547067;
+      color: #55788b;
       font-size: 12px;
       font-weight: 650;
       letter-spacing: .16em;
@@ -386,14 +437,13 @@ function loginDocument({ error, next, nonce }) {
     .mark {
       display: grid;
       place-items: center;
-      width: 28px;
-      height: 28px;
-      border-radius: 10px;
-      color: white;
-      background: linear-gradient(145deg, #65ae91, #287e62);
-      box-shadow: 0 6px 16px rgba(42, 128, 100, .18);
-      font-size: 14px;
-      letter-spacing: 0;
+      width: 30px;
+      height: 30px;
+    }
+    .mark img {
+      width: 30px;
+      height: 30px;
+      filter: drop-shadow(0 3px 7px rgba(32, 147, 203, .13));
     }
     h1 {
       margin: 0;
@@ -411,7 +461,7 @@ function loginDocument({ error, next, nonce }) {
     label {
       display: block;
       margin: 0 0 8px 2px;
-      color: #45554f;
+      color: #405d6e;
       font-size: 13px;
       font-weight: 600;
     }
@@ -430,9 +480,9 @@ function loginDocument({ error, next, nonce }) {
       font-size: 16px;
       transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
     }
-    input:hover { border-color: rgba(42, 128, 100, .25); }
+    input:hover { border-color: rgba(31, 157, 220, .28); }
     input:focus {
-      border-color: rgba(42, 128, 100, .55);
+      border-color: rgba(31, 157, 220, .58);
       box-shadow: 0 0 0 4px var(--focus);
       background: white;
     }
@@ -444,14 +494,14 @@ function loginDocument({ error, next, nonce }) {
       height: 44px;
       border: 0;
       border-radius: 12px;
-      color: #66766f;
+      color: #647987;
       background: transparent;
       font: inherit;
       font-size: 12px;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
-    .reveal:hover { background: rgba(38, 104, 80, .07); }
+    .reveal:hover { background: rgba(31, 139, 196, .07); }
     .reveal:focus-visible { outline: 3px solid var(--focus); outline-offset: 0; }
     .error {
       display: ${safeError ? "flex" : "none"};
@@ -476,8 +526,8 @@ function loginDocument({ error, next, nonce }) {
       border: 0;
       border-radius: 15px;
       color: white;
-      background: linear-gradient(180deg, #328d6d, #267b5e);
-      box-shadow: 0 10px 24px rgba(34, 116, 87, .2), inset 0 1px 0 rgba(255, 255, 255, .22);
+      background: linear-gradient(180deg, #25a8e6, #147fc0);
+      box-shadow: 0 10px 24px rgba(22, 128, 186, .2), inset 0 1px 0 rgba(255, 255, 255, .25);
       font: inherit;
       font-size: 15px;
       font-weight: 650;
@@ -485,7 +535,7 @@ function loginDocument({ error, next, nonce }) {
       transition: transform 120ms ease, box-shadow 180ms ease, background 180ms ease;
       -webkit-tap-highlight-color: transparent;
     }
-    .submit:hover { background: linear-gradient(180deg, #2c8566, #206f55); box-shadow: 0 12px 28px rgba(34, 116, 87, .24); }
+    .submit:hover { background: linear-gradient(180deg, #1d9edc, #0e72b0); box-shadow: 0 12px 28px rgba(22, 128, 186, .24); }
     .submit:active { transform: scale(.985); }
     .submit:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
     .submit[data-loading="true"] { cursor: wait; }
@@ -559,9 +609,9 @@ function loginDocument({ error, next, nonce }) {
   <div class="ambient" aria-hidden="true"><div class="orb orb-a"></div><div class="orb orb-b"></div></div>
   <main class="shell">
     <section class="card" aria-labelledby="access-title">
-      <div class="eyebrow"><span class="mark" aria-hidden="true">Z</span><span>ZOUYIHUI.ME</span></div>
-      <h1 id="access-title">欢迎回来</h1>
-      <p class="subtitle">这是一个受保护的私人空间。请输入访问密码后继续。</p>
+      <div class="eyebrow"><span class="mark" aria-hidden="true"><img src="/assets/mark.svg" alt=""></span><span>PERSONAL SPACE</span></div>
+      <h1 id="access-title">进入个人空间</h1>
+      <p class="subtitle">请输入个人空间密码。验证后，本次浏览器会话可以继续访问你的工作台。</p>
       <form id="access-form" method="post" action="/__access/login" novalidate>
         <input type="hidden" name="next" value="${safeNextValue}">
         <label for="access-password">访问密码</label>
@@ -624,6 +674,8 @@ function escapeHtml(value) {
 export const __test = {
   handleRequest,
   safeNext,
+  isPublicAssetPath,
+  ownerAdminRedirect,
   constantTimeEqual,
   loginFailures,
 };

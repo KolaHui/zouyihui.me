@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  // 所有 API 耦合都收敛在这里，便于不同运行环境共用同一套前端。
+  // 所有后端耦合都收敛在这里，便于本地、Tunnel 与线上环境共用同一套前端。
   const portalConfig = window.PORTAL_CONFIG || {};
   const isLocalAdminPage = ["127.0.0.1", "localhost"].includes(window.location.hostname);
   const API_BASE = String(
@@ -58,8 +58,10 @@
     publishSymbol: $("publishSymbol"),
     publishLabel: $("publishLabel"),
     publicLinkText: $("publicLinkText"),
-    openPublicBtn: $("openPublicBtn"),
-    copyPublicBtn: $("copyPublicBtn"),
+    inviteLabelInput: $("inviteLabelInput"),
+    openInviteBtn: $("openInviteBtn"),
+    generateInviteBtn: $("generateInviteBtn"),
+    inviteList: $("inviteList"),
     exportExcelBtn: $("exportExcelBtn"),
     refreshRecordsBtn: $("refreshRecordsBtn"),
     lastSyncText: $("lastSyncText"),
@@ -111,6 +113,9 @@
     recordsTotal: 0,
     recordsTruncated: false,
     recordsSnapshot: "",
+    invites: [],
+    invitesEventId: "",
+    lastInviteLink: "",
     pollTimer: 0,
     lastSyncAt: null,
   };
@@ -200,7 +205,7 @@
       });
     } catch (_) {
       setConnection(false, "主机离线");
-      const error = new Error("无法连接服务端，请稍后重试或联系管理员。");
+      const error = new Error("无法连接当前 Mac 主机，请确认本地服务与 Cloudflare Tunnel 正在运行。");
       error.status = 0;
       throw error;
     }
@@ -267,6 +272,18 @@
     return `${date.getMonth() + 1}月${date.getDate()}日足球赛购票需求登记`;
   }
 
+  function formatDateTime(value) {
+    const date = new Date(value || "");
+    if (Number.isNaN(date.getTime())) return "—";
+    return new Intl.DateTimeFormat("zh-CN", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(date);
+  }
+
   function compactPhone(value) {
     const compact = String(value || "").trim().replace(/[\s-]/g, "");
     return /^1[3-9]\d{9}$/.test(compact) ? compact : "";
@@ -294,12 +311,12 @@
     return checks[sum % 11] === id[17];
   }
 
-  function publicLink(event) {
-    if (!event || !event.public_token) return "";
+  function inviteLink(rawToken) {
+    if (!rawToken) return "";
     const url = new URL(PUBLIC_SITE_URL, window.location.href);
     url.search = "";
     url.hash = "";
-    url.searchParams.set("event", event.public_token);
+    url.hash = `invite=${encodeURIComponent(rawToken)}`;
     return url.toString();
   }
 
@@ -333,6 +350,9 @@
     state.recordsTruncated = false;
     state.recordsSnapshot = "";
     state.lastSyncAt = null;
+    state.invites = [];
+    state.invitesEventId = "";
+    state.lastInviteLink = "";
     ui.lastSyncText.textContent = "尚未同步";
     ui.recordsHint.textContent = "可横向滚动查看全部购票字段";
     updateSaveIndicator();
@@ -418,7 +438,7 @@
     const password = ui.passwordInput.value;
     if (!username || !password) return;
     setBusy(ui.loginBtn, true, "正在验证…");
-    setStatus(ui.loginStatus, "正在连接服务端…");
+    setStatus(ui.loginStatus, "正在连接当前 Mac 主机…");
     try {
       const data = await api("/login", {
         method: "POST",
@@ -439,6 +459,48 @@
     } finally {
       setBusy(ui.loginBtn, false);
     }
+  }
+
+  function takeOwnerAssertion() {
+    const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const assertion = params.get("owner") || "";
+    if (window.location.hash) {
+      // 所有者断言只存在于 fragment，读取后立即从地址栏和浏览器历史中清除。
+      window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    }
+    return assertion;
+  }
+
+  async function exchangeOwnerAssertion(assertion) {
+    showLogin("正在进入所有者控制台…");
+    try {
+      const data = await api("/owner-exchange", {
+        method: "POST",
+        auth: false,
+        body: { assertion },
+      });
+      if (!data.token) throw new Error("服务端未返回所有者登录凭证");
+      setToken(data.token);
+      state.admin = data.admin || { username: "所有者", role: "owner" };
+      state.mustChangePassword = Boolean(data.must_change_password);
+      showApp();
+      if (state.mustChangePassword) openPasswordModal(true);
+      else await loadEvents();
+      return true;
+    } catch (error) {
+      clearSession();
+      showLogin(`${error.message || "所有者授权失败"}，请返回个人空间重新进入。`, "error");
+      return false;
+    }
+  }
+
+  async function bootstrapAdmin() {
+    const assertion = takeOwnerAssertion();
+    if (assertion) {
+      await exchangeOwnerAssertion(assertion);
+      return;
+    }
+    await restoreSession();
   }
 
   async function restoreSession() {
@@ -552,7 +614,9 @@
       }
       renderEventList();
       renderSelectedEvent();
-      if (state.selectedEventId && options.loadRecords !== false) await loadRecords({ silent: options.silent });
+      if (state.selectedEventId && options.loadRecords !== false) {
+        await Promise.all([loadRecords({ silent: options.silent }), loadInvites({ silent: true })]);
+      }
     } catch (error) {
       if (!options.silent) showToast(error.message || "比赛列表加载失败", "error");
     } finally {
@@ -572,7 +636,21 @@
     state.selectedEventId = String(eventId);
     renderEventList();
     renderSelectedEvent();
-    await loadRecords();
+    await Promise.all([loadRecords(), loadInvites()]);
+  }
+
+  async function loadInvites(options = {}) {
+    const eventId = String(state.selectedEventId || "");
+    if (!eventId || state.mustChangePassword) return;
+    try {
+      const data = await api(`/events/${encodeURIComponent(eventId)}/invites`);
+      if (eventId !== String(state.selectedEventId)) return;
+      state.invites = unwrapList(data, ["invites", "rows", "items"]);
+      state.invitesEventId = eventId;
+      renderInvitePanel(currentEvent());
+    } catch (error) {
+      if (!options.silent) showToast(error.message || "客户链接状态加载失败", "error");
+    }
   }
 
   function renderSelectedEvent() {
@@ -599,12 +677,11 @@
     ui.closeEventBtn.hidden = !isPublished;
     ui.publishEventBtn.hidden = !canPublish;
     ui.publishEventBtn.textContent = event.status === "paused" ? "恢复收集" : "发布收集页";
-    renderPublicLink(event);
+    renderInvitePanel(event);
     renderMetrics();
   }
 
-  function renderPublicLink(event) {
-    const link = publicLink(event);
+  function renderInvitePanel(event) {
     const isCollecting = eventIsCollecting(event);
     const deadlinePassed = eventDeadlinePassed(event);
     ui.publishStrip.classList.toggle("active", isCollecting);
@@ -616,9 +693,43 @@
       : event && event.status === "paused"
       ? "收集已暂停"
       : "尚未发布";
-    ui.publicLinkText.textContent = link || "发布后会生成公开填写链接";
-    ui.openPublicBtn.disabled = !link || !isCollecting;
-    ui.copyPublicBtn.disabled = !link || !isCollecting;
+    ui.publicLinkText.textContent = state.lastInviteLink
+      ? "刚生成的客户专属链接已复制；原始链接不会保存在服务器。"
+      : isCollecting
+      ? "每位客户生成一个专属链接，成功提交一次后自动失效。"
+      : "发布后才可以生成客户专属链接。";
+    ui.inviteLabelInput.disabled = !isCollecting;
+    ui.generateInviteBtn.disabled = !isCollecting;
+    ui.openInviteBtn.disabled = !state.lastInviteLink;
+    renderInviteList();
+  }
+
+  function renderInviteList() {
+    if (!ui.inviteList) return;
+    if (!state.invites.length) {
+      ui.inviteList.innerHTML = '<div class="invite-empty">还没有生成客户链接。</div>';
+      return;
+    }
+    const statusLabels = { active: "未使用", used: "已使用", revoked: "已撤销" };
+    ui.inviteList.innerHTML = state.invites
+      .map((invite) => {
+        const status = invite.status || "revoked";
+        const createdAt = formatDateTime(invite.created_at);
+        const label = invite.label || `客户链接 ${String(invite.id || "").slice(-6).toUpperCase()}`;
+        const detail = status === "used"
+          ? `${invite.person_count || 0} 人 · ${formatDateTime(invite.used_at)}`
+          : createdAt;
+        return `<div class="invite-item">
+          <span class="invite-dot ${escapeHtml(status)}" aria-hidden="true"></span>
+          <span class="invite-copy"><strong>${escapeHtml(label)}</strong><small>${escapeHtml(detail)}</small></span>
+          <span class="invite-status ${escapeHtml(status)}">${statusLabels[status] || "不可用"}</span>
+          ${status === "active" ? `<button class="quiet-button invite-revoke" type="button" data-revoke-invite="${escapeHtml(invite.id)}">撤销</button>` : ""}
+        </div>`;
+      })
+      .join("");
+    ui.inviteList.querySelectorAll("[data-revoke-invite]").forEach((button) => {
+      button.addEventListener("click", () => revokeInvite(button.dataset.revokeInvite));
+    });
   }
 
   async function createEvent(event) {
@@ -626,7 +737,7 @@
     const body = { title: ui.createTitleInput.value.trim() };
     if (!body.title) return;
     setBusy(ui.createEventSubmitBtn, true, "正在建立…");
-    setStatus(ui.createEventStatus, "正在保存…");
+    setStatus(ui.createEventStatus, "正在保存到当前 Mac…");
     try {
       const data = await api("/events", { method: "POST", body });
       const created = unwrapItem(data, ["event", "item"]);
@@ -706,7 +817,7 @@
     const person = validatedAddRowPerson();
     if (!person) return;
     setBusy(ui.addRowSubmitBtn, true, "正在补录…");
-    setStatus(ui.addRowStatus, "正在写入…");
+    setStatus(ui.addRowStatus, "正在写入当前 Mac…");
     try {
       await api("/submissions", {
         method: "POST",
@@ -766,13 +877,10 @@
     setBusy(ui.publishEventBtn, true, "发布中…");
     setStatus(ui.eventFormStatus, "正在生成公开填写页…");
     try {
-      const updated = await patchCurrentEvent({ status: "published" });
-      if (!updated.public_token) {
-        setStatus(ui.eventFormStatus, "已发布，但暂未获得公开链接，请刷新后再试。", "error");
-      } else {
-        setStatus(ui.eventFormStatus, "收集页已发布，可以复制链接发给填写人。", "ok");
-        showToast("收集页已发布。", "ok");
-      }
+      await patchCurrentEvent({ status: "published" });
+      setStatus(ui.eventFormStatus, "收集页已发布，现在可为每位客户生成一次性链接。", "ok");
+      showToast("收集页已发布。", "ok");
+      await loadInvites({ silent: true });
     } catch (error) {
       setStatus(ui.eventFormStatus, error.message || "发布失败", "error");
     } finally {
@@ -828,7 +936,7 @@
     state.recordsLoading = true;
     ui.refreshRecordsBtn.disabled = true;
     ui.exportExcelBtn.disabled = true;
-    if (!options.silent) ui.recordsHint.textContent = "正在同步最新数据…";
+    if (!options.silent) ui.recordsHint.textContent = "正在从当前 Mac 同步…";
     try {
       let offset = 0;
       let total = Infinity;
@@ -1265,27 +1373,64 @@
     }
   }
 
-  async function copyPublicLink() {
-    const event = currentEvent();
-    const link = publicLink(event);
-    if (!link || !eventIsCollecting(event)) {
-      showToast("公开页当前未处于有效收集状态，不能复制填写链接。", "error");
-      renderPublicLink(event);
-      return;
-    }
+  async function copyText(value) {
     try {
-      await navigator.clipboard.writeText(link);
-      showToast("公开填写链接已复制。", "ok");
+      await navigator.clipboard.writeText(value);
+      return true;
     } catch (_) {
       const input = document.createElement("textarea");
-      input.value = link;
+      input.value = value;
       input.style.position = "fixed";
       input.style.opacity = "0";
       document.body.appendChild(input);
       input.select();
       const copied = document.execCommand("copy");
       input.remove();
-      showToast(copied ? "公开填写链接已复制。" : `请手动复制：${link}`, copied ? "ok" : "error");
+      return copied;
+    }
+  }
+
+  async function generateInviteLink() {
+    const event = currentEvent();
+    if (!event || !eventIsCollecting(event)) {
+      showToast("请先发布活动，再生成客户链接。", "error");
+      renderInvitePanel(event);
+      return;
+    }
+    setBusy(ui.generateInviteBtn, true, "正在生成…");
+    try {
+      const label = ui.inviteLabelInput.value.trim();
+      const data = await api(`/events/${encodeURIComponent(event.id)}/invites`, {
+        method: "POST",
+        body: label ? { label } : {},
+      });
+      const link = inviteLink(data.token);
+      if (!link) throw new Error("服务器未返回客户链接令牌");
+      state.lastInviteLink = link;
+      ui.inviteLabelInput.value = "";
+      const copied = await copyText(link);
+      await loadInvites({ silent: true });
+      renderInvitePanel(event);
+      showToast(
+        copied ? "客户专属链接已生成并复制，只能成功提交一次。" : `链接已生成，请手动复制：${link}`,
+        copied ? "ok" : "error"
+      );
+    } catch (error) {
+      showToast(error.message || "客户链接生成失败", "error");
+    } finally {
+      setBusy(ui.generateInviteBtn, false);
+      renderInvitePanel(currentEvent());
+    }
+  }
+
+  async function revokeInvite(inviteId) {
+    if (!window.confirm("撤销后该客户链接将立即失效，确定撤销？")) return;
+    try {
+      await api(`/invites/${encodeURIComponent(inviteId)}`, { method: "DELETE" });
+      await loadInvites({ silent: true });
+      showToast("客户链接已撤销。", "ok");
+    } catch (error) {
+      showToast(error.message || "撤销失败", "error");
     }
   }
 
@@ -1327,7 +1472,7 @@
   function startPolling() {
     stopPolling();
     state.pollTimer = window.setInterval(() => {
-      if (state.selectedEventId) renderPublicLink(currentEvent());
+      if (state.selectedEventId) renderInvitePanel(currentEvent());
       if (
         document.hidden ||
         !state.selectedEventId ||
@@ -1336,6 +1481,7 @@
         state.mustChangePassword
       ) return;
       loadRecords({ silent: true });
+      loadInvites({ silent: true });
     }, AUTO_REFRESH_MS);
   }
 
@@ -1369,12 +1515,10 @@
     ui.eventForm.addEventListener("submit", saveEvent);
     ui.publishEventBtn.addEventListener("click", publishEvent);
     ui.closeEventBtn.addEventListener("click", pauseEvent);
-    ui.copyPublicBtn.addEventListener("click", copyPublicLink);
-    ui.openPublicBtn.addEventListener("click", () => {
-      const event = currentEvent();
-      const link = publicLink(event);
-      if (link && eventIsCollecting(event)) window.open(link, "_blank", "noopener,noreferrer");
-      else renderPublicLink(event);
+    ui.generateInviteBtn.addEventListener("click", generateInviteLink);
+    ui.openInviteBtn.addEventListener("click", () => {
+      if (state.lastInviteLink) window.open(state.lastInviteLink, "_blank", "noopener,noreferrer");
+      else renderInvitePanel(currentEvent());
     });
     ui.refreshRecordsBtn.addEventListener("click", refreshRecords);
     ui.addRowBtn.addEventListener("click", openAddRowModal);
@@ -1422,8 +1566,9 @@
         !state.recordsLoading &&
         !state.mustChangePassword
       ) {
-        renderPublicLink(currentEvent());
+        renderInvitePanel(currentEvent());
         loadRecords({ silent: true });
+        loadInvites({ silent: true });
       }
     });
     window.addEventListener("beforeunload", (event) => {
@@ -1435,5 +1580,5 @@
   }
 
   bindEvents();
-  restoreSession();
+  bootstrapAdmin();
 })();

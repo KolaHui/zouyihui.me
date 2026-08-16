@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f3fbff">
+  <meta name="color-scheme" content="light">
+  <title>我的个人空间 · ZOUYIHUI.ME</title>
+  <link rel="icon" href="../assets/mark.svg" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+      font-synthesis: none;
+      --ink: #10293c;
+      --muted: rgba(28, 65, 88, .58);
+      --focus: rgba(31, 157, 220, .18);
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: radial-gradient(ellipse at 15% 5%, rgba(119,220,229,.26), transparent 42%), radial-gradient(ellipse at 92% 84%, rgba(83,170,230,.2), transparent 46%), linear-gradient(145deg,#f9fdff,#eef9ff 52%,#f7fcff);
+      -webkit-font-smoothing: antialiased;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-radial-gradient(ellipse at 54% 43%, transparent 0 10%, rgba(255,255,255,.36) 10.2% 10.5%, transparent 10.8% 17%);
+      opacity: .2;
+      filter: blur(8px);
+      mask-image: radial-gradient(ellipse,#000,transparent 70%);
+    }
+    .shell { position: relative; width: min(1080px,calc(100% - 32px)); margin: 0 auto; padding: max(24px,env(safe-area-inset-top)) 0 max(44px,env(safe-area-inset-bottom)); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .home-link {
+      display: grid;
+      place-items: center;
+      width: 56px;
+      height: 56px;
+      border: 1px solid rgba(255,255,255,.78);
+      border-radius: 18px;
+      background: rgba(255,255,255,.46);
+      box-shadow: 0 12px 34px rgba(43,116,153,.09), inset 0 1px 0 #fff;
+      backdrop-filter: blur(18px) saturate(145%);
+      -webkit-backdrop-filter: blur(18px) saturate(145%);
+      transition: transform 180ms ease, box-shadow 220ms ease;
+    }
+    .home-link:hover { transform: translateY(-2px); box-shadow: 0 16px 38px rgba(43,116,153,.14), inset 0 1px 0 #fff; }
+    .home-link img { width: 41px; height: 41px; }
+    .logout { margin: 0; }
+    .logout button {
+      min-height: 44px;
+      padding: 0 15px;
+      border: 1px solid rgba(255,255,255,.72);
+      border-radius: 14px;
+      color: var(--muted);
+      background: rgba(255,255,255,.42);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      cursor: pointer;
+      transition: color 180ms ease, background 180ms ease, transform 100ms ease;
+    }
+    .logout button:hover { color: #145c7d; background: rgba(255,255,255,.7); }
+    .logout button:active { transform: scale(.97); }
+    .intro { padding: clamp(62px,11vw,122px) 0 clamp(34px,7vw,68px); }
+    .eyebrow { margin: 0 0 14px; color: rgba(19,111,151,.62); font-size: 12px; font-weight: 650; letter-spacing: .18em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(38px,7vw,72px); font-weight: 560; line-height: 1.02; letter-spacing: -.055em; }
+    .subtitle { max-width: 520px; margin: 18px 0 0; color: var(--muted); font-size: clamp(15px,2vw,17px); line-height: 1.7; }
+    .tools { display: grid; grid-template-columns: repeat(12,1fr); gap: 14px; }
+    .tool {
+      position: relative;
+      grid-column: span 4;
+      min-height: 184px;
+      padding: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.76);
+      border-radius: 25px;
+      color: var(--ink);
+      background: linear-gradient(145deg,rgba(255,255,255,.68),rgba(235,248,253,.4));
+      box-shadow: 0 18px 52px rgba(45,112,146,.09), inset 0 1px 0 rgba(255,255,255,.96);
+      backdrop-filter: blur(23px) saturate(145%);
+      -webkit-backdrop-filter: blur(23px) saturate(145%);
+      text-decoration: none;
+      transition: transform 280ms cubic-bezier(.2,.9,.2,1), box-shadow 280ms ease, border-color 220ms ease;
+    }
+    .tool::before {
+      content: "";
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      right: -52px;
+      bottom: -68px;
+      border-radius: 50%;
+      opacity: .42;
+      background: radial-gradient(circle,var(--wash,rgba(72,193,218,.3)),transparent 70%);
+      transition: transform 480ms cubic-bezier(.2,.9,.2,1), opacity 260ms ease;
+    }
+    .tool:hover { border-color: rgba(255,255,255,.98); box-shadow: 0 24px 62px rgba(45,112,146,.15), inset 0 1px 0 #fff; transform: translateY(-5px); }
+    .tool:hover::before { transform: scale(1.45) translate(-10px,-8px); opacity: .65; }
+    .tool:active { transform: scale(.985); transition-duration: 90ms; }
+    .tool:focus-visible, .home-link:focus-visible, .logout button:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
+    .tool.featured { grid-column: span 8; --wash: rgba(54,187,218,.38); }
+    .tool.admin { --wash: rgba(255,211,223,.46); }
+    .tool.ai { --wash: rgba(100,171,234,.34); }
+    .tool.file { --wash: rgba(111,219,196,.34); }
+    .tool.node { --wash: rgba(139,182,232,.32); }
+    .tool-kicker { display: block; margin-bottom: 34px; color: rgba(23,91,123,.52); font-size: 11px; font-weight: 680; letter-spacing: .13em; text-transform: uppercase; }
+    .tool-title { display: block; font-size: 19px; font-weight: 630; letter-spacing: -.025em; }
+    .tool-note { display: block; margin-top: 7px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .arrow { position: absolute; top: 23px; right: 23px; width: 22px; height: 22px; border-radius: 50%; color: rgba(15,83,113,.55); background: rgba(255,255,255,.48); }
+    .arrow::before { content: ""; position: absolute; width: 5px; height: 5px; left: 7px; top: 7px; border-top: 1.3px solid currentColor; border-right: 1.3px solid currentColor; transform: rotate(45deg); }
+    @media (max-width: 760px) { .intro { padding-top: 56px; } .tool, .tool.featured { grid-column: span 6; } }
+    @media (max-width: 520px) { .shell { width: min(100% - 24px,1080px); } .intro { padding: 48px 4px 30px; } .tools { gap: 10px; } .tool, .tool.featured { grid-column: 1 / -1; min-height: 150px; padding: 21px; border-radius: 22px; } .tool-kicker { margin-bottom: 24px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+    @media (prefers-reduced-transparency: reduce) { .tool, .home-link, .logout button { background: #f8fcfe; backdrop-filter: none; -webkit-backdrop-filter: none; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="home-link" href="../" aria-label="返回公开主页"><img src="../assets/mark.svg" alt=""></a>
+      <form class="logout" method="post" action="/__access/logout"><button type="submit">退出个人空间</button></form>
+    </header>
+    <section class="intro" aria-labelledby="spaceTitle">
+      <p class="eyebrow">Private space</p>
+      <h1 id="spaceTitle">我的个人空间</h1>
+      <p class="subtitle">常用工作台与管理入口集中在这里。当前会话由边缘访问保护，关闭会话后需要重新验证。</p>
+    </section>
+    <nav class="tools" aria-label="个人工具">
+      <a class="tool featured" href="../apps/parser-v2/"><span class="tool-kicker">Information · V2</span><span class="tool-title">信息拆分工具 V2</span><span class="tool-note">结构化整理购票信息与模板预览</span><span class="arrow" aria-hidden="true"></span></a>
+      <a class="tool admin" href="/__access/owner-admin"><span class="tool-kicker">Owner</span><span class="tool-title">比赛信息收集后台</span><span class="tool-note">以所有者权限直接进入，无需再次验证</span><span class="arrow" aria-hidden="true"></span></a>
+      <a class="tool" href="../apps/legacy-parser/"><span class="tool-kicker">Information · V1</span><span class="tool-title">信息拆分工具</span><span class="tool-note">保留的旧版处理工作台</span><span class="arrow" aria-hidden="true"></span></a>
+      <a class="tool ai" href="../apps/ai-chat/"><span class="tool-kicker">Intelligence</span><span class="tool-title">AI 工作台</span><span class="tool-note">对话、图像与视频工具</span><span class="arrow" aria-hidden="true"></span></a>
+      <a class="tool file" href="../apps/file-drop/"><span class="tool-kicker">Transfer</span><span class="tool-title">文件传输</span><span class="tool-note">向本地安全传递文件</span><span class="arrow" aria-hidden="true"></span></a>
+      <a class="tool node" href="../apps/v2ray-to-clash/"><span class="tool-kicker">Network</span><span class="tool-title">节点转 Clash</span><span class="tool-note">快速转换订阅与节点格式</span><span class="arrow" aria-hidden="true"></span></a>
+    </nav>
+  </main>
+</body>
+</html>

@@ -1,156 +1,455 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>工具入口</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4fbff">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Zou Yihui 的个人主页">
+  <title>ZOUYIHUI.ME</title>
+  <link rel="icon" href="./assets/mark.svg" type="image/svg+xml">
   <style>
     :root {
-      --bg: #f5f7ff;
-      --panel: rgba(255, 255, 255, 0.68);
-      --ink: rgba(15, 23, 42, 0.92);
-      --muted: rgba(15, 23, 42, 0.55);
-      --line: rgba(15, 23, 42, 0.14);
-      --accent: #2f6bff;
-      --accent-dark: #4a8dff;
-      --accent-soft: rgba(47, 107, 255, 0.12);
-      --shadow: 0 28px 70px rgba(15, 23, 42, 0.12);
+      color-scheme: light;
+      font: 100%/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+      font-synthesis: none;
+      --ink: #102c3e;
+      --edge: clamp(18px, 3vw, 34px);
+      --mark-box: 74px;
+      --mark-half: 37px;
+      --tilt-x: 0deg;
+      --tilt-y: 0deg;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
     body {
       margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+      min-height: 100svh;
+      overflow: hidden;
       color: var(--ink);
-      background:
-        radial-gradient(1200px 780px at 12% 10%, rgba(47, 107, 255, 0.22), transparent 60%),
-        radial-gradient(980px 680px at 88% 28%, rgba(255, 96, 200, 0.16), transparent 55%),
-        radial-gradient(900px 720px at 60% 96%, rgba(54, 214, 191, 0.2), transparent 58%),
-        linear-gradient(180deg, #f8faff, #eef2ff 60%, #f7f9ff);
+      background: #f3faff;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
     }
-
-    main {
-      width: min(720px, 100%);
-      padding: clamp(28px, 6vw, 52px);
-      border: 1px solid rgba(255, 255, 255, 0.86);
-      border-radius: 26px;
-      background: var(--panel);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(22px);
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 18px;
-      padding: 7px 12px;
-      border: 1px solid var(--line);
+    button, a { font: inherit; }
+    .skip-link {
+      position: fixed;
+      z-index: 100;
+      top: 10px;
+      left: 50%;
+      padding: 10px 14px;
       border-radius: 999px;
-      color: var(--accent-dark);
-      background: rgba(255, 255, 255, 0.58);
-      font-size: 12px;
-      font-weight: 600;
+      color: #0b3550;
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 10px 32px rgba(22,75,104,.14);
+      transform: translate(-50%, -150%);
+      transition: transform 180ms ease;
     }
-
-    .eyebrow::before {
+    .skip-link:focus { transform: translate(-50%, 0); }
+    .world {
+      position: fixed;
+      inset: 0;
+      isolation: isolate;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 49% 43%, rgba(255,255,255,.98) 0 12%, rgba(246,252,255,.64) 34%, transparent 66%),
+        radial-gradient(ellipse at 18% 8%, rgba(147,229,241,.18), transparent 44%),
+        radial-gradient(ellipse at 91% 88%, rgba(82,163,227,.13), transparent 45%),
+        linear-gradient(142deg, #fbfeff 0%, #eef9ff 52%, #f8fcff 100%);
+    }
+    .world::after {
       content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 0 5px var(--accent-soft);
+      position: absolute;
+      z-index: 4;
+      inset: 0;
+      pointer-events: none;
+      opacity: .11;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.15'/%3E%3C/svg%3E");
+      mix-blend-mode: soft-light;
     }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(32px, 7vw, 58px);
-      line-height: 1.05;
-      letter-spacing: 0;
+    .ambient-canvas {
+      position: absolute;
+      z-index: 1;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
     }
-
-    .actions {
+    .brand-stage {
+      position: fixed;
+      z-index: 30;
+      top: var(--edge);
+      left: var(--edge);
+      width: var(--mark-box);
+      height: var(--mark-box);
+      transform-origin: center;
+      animation: dock-logo 2.8s cubic-bezier(.2,.83,.24,1) both;
+      will-change: transform;
+    }
+    .brand-button {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: var(--mark-box);
+      height: var(--mark-box);
+      padding: 0;
+      border: 0;
+      border-radius: 22px;
+      color: #159bd8;
+      background: transparent;
+      cursor: pointer;
+      outline: none;
+    }
+    .brand-button::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border: 1px solid rgba(255,255,255,.84);
+      border-radius: 21px;
+      opacity: 0;
+      background: linear-gradient(145deg, rgba(255,255,255,.72), rgba(227,246,253,.36));
+      box-shadow: 0 12px 34px rgba(43,116,153,.11), inset 0 1px 0 rgba(255,255,255,.94);
+      backdrop-filter: blur(16px) saturate(145%);
+      -webkit-backdrop-filter: blur(16px) saturate(145%);
+      transform: scale(.82);
+      transition: opacity 220ms ease, transform 380ms cubic-bezier(.2,.9,.2,1);
+    }
+    html[data-docked="true"] .brand-button:hover::before,
+    html[data-docked="true"] .brand-button:focus-visible::before { opacity: 1; transform: scale(1); }
+    .brand-button:focus-visible { box-shadow: 0 0 0 4px rgba(39,155,215,.17); }
+    .mark-tilt {
+      position: relative;
+      z-index: 1;
+      width: 64px;
+      height: 64px;
+      transform: perspective(600px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+      transform-style: preserve-3d;
+      transition: transform 120ms linear;
+      will-change: transform;
+    }
+    .mark-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 8px 10px rgba(20,113,163,.13));
+    }
+    .entry-nav {
+      position: fixed;
+      z-index: 20;
+      right: max(var(--edge), env(safe-area-inset-right));
+      bottom: max(var(--edge), env(safe-area-inset-bottom));
       display: flex;
-      flex-wrap: wrap;
+      gap: 10px;
       align-items: center;
-      gap: 14px;
-      margin-top: 34px;
+      opacity: 0;
+      transform: translate3d(0,12px,0);
+      animation: reveal-nav 700ms cubic-bezier(.2,.9,.2,1) 2.42s forwards;
     }
-
-    .tool-button {
+    .entry {
+      position: relative;
       display: inline-flex;
+      min-height: 50px;
       align-items: center;
       justify-content: center;
-      min-height: 48px;
-      padding: 0 22px;
-      border-radius: 14px;
-      color: #f8fffc;
-      background: linear-gradient(120deg, var(--accent), var(--accent-dark));
-      box-shadow: 0 14px 34px rgba(47, 107, 255, 0.28);
-      font-size: 15px;
-      font-weight: 700;
+      gap: 9px;
+      padding: 0 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.78);
+      border-radius: 17px;
+      color: rgba(15,48,69,.82);
+      background: linear-gradient(145deg, rgba(255,255,255,.72), rgba(231,247,255,.4));
+      box-shadow: 0 14px 40px rgba(43,116,153,.1), inset 0 1px 0 rgba(255,255,255,.94);
+      backdrop-filter: blur(20px) saturate(145%);
+      -webkit-backdrop-filter: blur(20px) saturate(145%);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: .01em;
       text-decoration: none;
-      transition: transform 0.16s ease, box-shadow 0.16s ease;
+      transition: transform 180ms ease, border-color 220ms ease, box-shadow 260ms ease, color 220ms ease;
     }
-
-    .tool-button.secondary {
-      color: var(--accent-dark);
-      background: rgba(255, 255, 255, 0.66);
-      border: 1px solid rgba(47, 107, 255, 0.24);
-      box-shadow: 0 12px 30px rgba(47, 107, 255, 0.12);
+    .entry::after {
+      content: "";
+      width: 5px;
+      height: 5px;
+      border-top: 1.4px solid currentColor;
+      border-right: 1.4px solid currentColor;
+      opacity: .65;
+      transform: rotate(45deg);
+      transition: transform 200ms ease;
     }
-
-    .tool-button.matchday {
-      color: #17230d;
-      background: linear-gradient(120deg, #d7ff62, #aee72c);
-      box-shadow: 0 14px 34px rgba(116, 166, 22, 0.24);
-    }
-
-    .tool-button:hover {
+    .entry:hover {
+      color: #0d6693;
+      border-color: rgba(255,255,255,.98);
+      box-shadow: 0 18px 48px rgba(38,124,167,.15), inset 0 1px 0 #fff;
       transform: translateY(-2px);
-      box-shadow: 0 18px 40px rgba(23, 111, 99, 0.3);
     }
-
-    .tool-button:focus-visible {
-      outline: 3px solid rgba(47, 107, 255, 0.28);
-      outline-offset: 4px;
+    .entry:hover::after { transform: translateX(2px) rotate(45deg); }
+    .entry:active { transform: scale(.975); transition-duration: 90ms; }
+    .entry:focus-visible { outline: 4px solid rgba(39,155,215,.17); outline-offset: 3px; }
+    .entry.primary { color: #0a526f; background: linear-gradient(145deg, rgba(241,253,255,.84), rgba(200,239,248,.52)); }
+    .whisper {
+      position: fixed;
+      z-index: 10;
+      left: max(var(--edge), env(safe-area-inset-left));
+      bottom: max(var(--edge), env(safe-area-inset-bottom));
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      opacity: 0;
+      background: rgba(24,149,207,.55);
+      box-shadow: 10px 0 0 rgba(79,210,218,.32), 20px 0 0 rgba(255,205,217,.25);
+      animation: reveal-dot 500ms ease 2.8s forwards;
     }
-
-    @media (max-width: 560px) {
-      body {
-        padding: 14px;
-      }
-
-      main {
-        border-radius: 22px;
-      }
-
-      .tool-button {
-        width: 100%;
-      }
+    .ripple {
+      position: fixed;
+      z-index: 8;
+      width: 18px;
+      height: 18px;
+      margin: -9px 0 0 -9px;
+      border: 1px solid rgba(44,164,216,.25);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: ripple 1.2s cubic-bezier(.2,.7,.2,1) forwards;
+    }
+    html[data-replay="true"] .brand-stage, html[data-replay="true"] .entry-nav, html[data-replay="true"] .whisper { animation: none; }
+    html[data-replay="true"] .entry-nav, html[data-replay="true"] .whisper { opacity: 0; }
+    @keyframes dock-logo {
+      0%, 71% { transform: translate3d(calc(50vw - var(--edge) - var(--mark-half)), calc(50svh - var(--edge) - var(--mark-half)), 0) scale(3.38); }
+      81% { transform: translate3d(calc(50vw - var(--edge) - var(--mark-half)), calc(50svh - var(--edge) - var(--mark-half)), 0) scale(3.38); }
+      100% { transform: translate3d(0,0,0) scale(1); }
+    }
+    @keyframes reveal-nav { to { opacity: 1; transform: none; } }
+    @keyframes reveal-dot { to { opacity: 1; } }
+    @keyframes ripple { to { opacity: 0; transform: scale(14); } }
+    @media (max-width: 620px) {
+      :root { --edge: max(16px, env(safe-area-inset-left)); --mark-box: 64px; --mark-half: 32px; }
+      .brand-button { border-radius: 19px; }
+      .brand-button::before { border-radius: 18px; }
+      .mark-tilt { width: 55px; height: 55px; }
+      .entry-nav { left: max(16px, env(safe-area-inset-left)); right: max(16px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1fr 1fr; }
+      .entry { min-width: 0; padding: 0 13px; font-size: 13px; }
+      .whisper { display: none; }
+    }
+    @media (max-width: 350px) { .entry-nav { grid-template-columns: 1fr; } .entry { min-height: 48px; } }
+    @media (prefers-reduced-motion: reduce) {
+      .brand-stage, .entry-nav, .whisper, .ripple { animation: none !important; }
+      .brand-stage { transform: none !important; }
+      .entry-nav, .whisper { opacity: 1; transform: none; }
+      .mark-tilt { transform: none !important; transition: none; }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      .entry, .brand-button::before { background: #f5fbfe; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    }
+    @media (prefers-contrast: more) {
+      .entry { color: #063c58; border-color: rgba(6,60,88,.38); background: rgba(255,255,255,.96); }
     }
   </style>
 </head>
 <body>
-  <main>
-    <div class="eyebrow">本地浏览器工具集</div>
-    <h1>购票信息处理台</h1>
-    <nav class="actions" aria-label="工具入口">
-      <a class="tool-button matchday" href="https://api.zouyihui.me/apps/admin/">比赛信息收集后台</a>
-      <a class="tool-button" href="./apps/legacy-parser/">信息拆分工具</a>
-      <a class="tool-button" href="./apps/parser-v2/">信息拆分工具 V2</a>
-      <a class="tool-button secondary" href="./apps/ai-chat/">AI 工作台</a>
-      <a class="tool-button secondary" href="./apps/file-drop/">文件传输</a>
-      <a class="tool-button secondary" href="./apps/v2ray-to-clash/">节点转 Clash</a>
+  <a class="skip-link" href="#entryNav">跳到入口</a>
+  <main class="world" aria-labelledby="siteTitle">
+    <h1 id="siteTitle" hidden>ZOUYIHUI.ME</h1>
+    <canvas class="ambient-canvas" id="ambientCanvas" aria-hidden="true"></canvas>
+    <div class="brand-stage">
+      <button class="brand-button" id="brandButton" type="button" aria-label="重新播放标志动画">
+        <span class="mark-tilt"><canvas class="mark-canvas" id="markCanvas" width="480" height="480" aria-hidden="true"></canvas></span>
+      </button>
+    </div>
+    <nav class="entry-nav" id="entryNav" aria-label="主页入口">
+      <a class="entry primary" href="./personal/">我的个人空间</a>
+      <a class="entry" href="./apps/admin/">管理后台</a>
     </nav>
+    <span class="whisper" aria-hidden="true"></span>
   </main>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const world = document.querySelector(".world");
+      const brandButton = document.getElementById("brandButton");
+      const markCanvas = document.getElementById("markCanvas");
+      const ambientCanvas = document.getElementById("ambientCanvas");
+      const markContext = markCanvas.getContext("2d", { alpha: true });
+      const ambientContext = ambientCanvas.getContext("2d", { alpha: true });
+      const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+      let introStarted = performance.now();
+      let width = 0, height = 0, ratio = 1;
+      let pointerTargetX = 0, pointerTargetY = 0, pointerX = 0, pointerY = 0;
+      let lastFrame = 0, animationFrame = 0, dockTimer = 0, ambientTick = 0;
+      const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
+      const smoothstep = (edge0, edge1, value) => { const x = clamp((value - edge0) / (edge1 - edge0), 0, 1); return x * x * (3 - 2 * x); };
+
+      function resizeAmbient() {
+        width = innerWidth;
+        height = innerHeight;
+        ratio = Math.min(devicePixelRatio || 1, 1.35);
+        ambientCanvas.width = Math.round(width * ratio);
+        ambientCanvas.height = Math.round(height * ratio);
+        ambientCanvas.style.width = `${width}px`;
+        ambientCanvas.style.height = `${height}px`;
+        ambientContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+      }
+
+      function catmullRom(points, samples = 14) {
+        const result = [];
+        for (let index = 0; index < points.length - 1; index += 1) {
+          const p0 = points[Math.max(0, index - 1)], p1 = points[index], p2 = points[index + 1], p3 = points[Math.min(points.length - 1, index + 2)];
+          for (let sample = 0; sample < samples; sample += 1) {
+            const t = sample / samples, t2 = t * t, t3 = t2 * t;
+            result.push({
+              x: .5 * ((2*p1.x) + (-p0.x+p2.x)*t + (2*p0.x-5*p1.x+4*p2.x-p3.x)*t2 + (-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
+              y: .5 * ((2*p1.y) + (-p0.y+p2.y)*t + (2*p0.y-5*p1.y+4*p2.y-p3.y)*t2 + (-p0.y+3*p1.y-3*p2.y+p3.y)*t3)
+            });
+          }
+        }
+        result.push(points[points.length - 1]);
+        return result;
+      }
+
+      function strokeCurve(context, points, progress, style, lineWidth, blur = 0) {
+        if (points.length < 2 || progress <= 0) return;
+        const visible = clamp(progress, 0, 1) * (points.length - 1);
+        const end = Math.max(1, Math.ceil(visible));
+        context.save();
+        context.beginPath();
+        context.moveTo(points[0].x, points[0].y);
+        for (let index = 1; index <= end && index < points.length; index += 1) {
+          const amount = index > visible ? visible - (index - 1) : 1;
+          if (amount <= 0) break;
+          const previous = points[index - 1], current = points[index];
+          context.lineTo(previous.x + (current.x - previous.x) * amount, previous.y + (current.y - previous.y) * amount);
+        }
+        context.strokeStyle = style;
+        context.lineWidth = lineWidth;
+        context.lineCap = "round";
+        context.lineJoin = "round";
+        context.shadowBlur = blur;
+        context.shadowColor = typeof style === "string" ? style : "rgba(39,157,210,.2)";
+        context.stroke();
+        context.restore();
+      }
+
+      function logoPoints(seconds) {
+        const drift = Math.sin(seconds * .74), breath = Math.sin(seconds * .47 + 1.1), curl = Math.sin(seconds * .61 + 2.2);
+        const main = [
+          {x:58,y:138+drift*3},{x:116+breath*3,y:92-curl*2},{x:228+drift*4,y:99+breath*3},{x:353-breath*4,y:133+curl*2},
+          {x:320+drift*3,y:185-breath*3},{x:235-curl*4,y:220+drift*2},{x:169+breath*3,y:271+curl*3},{x:109-drift*3,y:329-breath*2},
+          {x:180+curl*3,y:359+drift*3},{x:286+breath*4,y:350-curl*3},{x:371-drift*3,y:307+breath*2}
+        ];
+        const branch = [{x:111-curl*2,y:135+breath*2},{x:164+drift*3,y:167-breath*2},{x:218-breath*2,y:219+curl*2},{x:258+curl*3,y:278+drift*2},{x:247-drift*2,y:356-breath*3}];
+        const tributary = [{x:344+breath*2,y:132-drift*2},{x:305-curl*3,y:157+breath*2},{x:264+drift*2,y:186-curl*2},{x:218-breath*2,y:219+curl*2}];
+        return { main: catmullRom(main, 16), branch: catmullRom(branch, 16), tributary: catmullRom(tributary, 16) };
+      }
+
+      function drawMark(seconds, intro) {
+        const context = markContext, paths = logoPoints(seconds);
+        context.clearRect(0, 0, 480, 480);
+        const gradient = context.createLinearGradient(70, 85, 370, 365);
+        gradient.addColorStop(0, "rgba(182,248,249,.98)");
+        gradient.addColorStop(.22, "rgba(66,207,222,.98)");
+        gradient.addColorStop(.52, "rgba(20,143,208,.99)");
+        gradient.addColorStop(.73, "rgba(83,213,222,.97)");
+        gradient.addColorStop(1, "rgba(42,119,190,.98)");
+        [
+          [paths.branch, smoothstep(.22,.82,intro), 7.4],
+          [paths.tributary, smoothstep(.36,.9,intro), 5.6],
+          [paths.main, smoothstep(.02,.67,intro), 10.8]
+        ].forEach(([path, reveal, size]) => {
+          strokeCurve(context, path.map(point => ({x:point.x+2.4,y:point.y+4.3})), reveal, "rgba(11,84,143,.16)", size+3.8, 4);
+          strokeCurve(context, path, reveal, "rgba(139,235,241,.2)", size+5.4, 5);
+          strokeCurve(context, path, reveal, gradient, size, 1.4);
+          context.save();
+          context.setLineDash([52,164]);
+          context.lineDashOffset = -seconds * 22;
+          strokeCurve(context, path.map((point,index) => ({x:point.x-1.1+Math.sin(index*.16+seconds*1.15)*.45,y:point.y-1.7})), reveal, "rgba(248,255,255,.72)", Math.max(1.25,size*.14));
+          context.restore();
+        });
+        const glow = context.createRadialGradient(218,219,0,218,219,28);
+        glow.addColorStop(0, `rgba(255,211,224,${.21 * smoothstep(.22,.82,intro)})`);
+        glow.addColorStop(1, "rgba(255,211,224,0)");
+        context.fillStyle = glow;
+        context.beginPath();
+        context.arc(218,219,28,0,Math.PI*2);
+        context.fill();
+      }
+
+      function ambientPath(baseY, amplitude, phase, seconds, reverse = false) {
+        const points = [], direction = reverse ? -1 : 1;
+        for (let index = -1; index <= 7; index += 1) {
+          points.push({
+            x: (index/6)*width + pointerX*(index%2?.7:-.35),
+            y: baseY + Math.sin(index*.91+seconds*.12*direction+phase)*amplitude + Math.sin(index*.43-seconds*.075+phase*1.7)*amplitude*.34 + pointerY*.42
+          });
+        }
+        return catmullRom(points, 18);
+      }
+
+      function drawAmbient(seconds) {
+        const context = ambientContext;
+        context.clearRect(0,0,width,height);
+        context.globalCompositeOperation = "multiply";
+        [
+          {y:height*.28,a:Math.max(38,height*.08),p:.4,c:"rgba(73,205,221,.075)",w:Math.max(58,height*.085),r:false},
+          {y:height*.58,a:Math.max(45,height*.1),p:2.5,c:"rgba(48,145,214,.054)",w:Math.max(76,height*.11),r:true},
+          {y:height*.79,a:Math.max(30,height*.07),p:4.1,c:"rgba(255,198,215,.04)",w:Math.max(50,height*.07),r:false}
+        ].forEach(ribbon => {
+          const path = ambientPath(ribbon.y,ribbon.a,ribbon.p,seconds,ribbon.r);
+          strokeCurve(context,path,1,ribbon.c,ribbon.w,8);
+          strokeCurve(context,path.map(point => ({x:point.x,y:point.y-ribbon.w*.16})),1,"rgba(255,255,255,.25)",1.1);
+        });
+        context.globalCompositeOperation = "source-over";
+      }
+
+      function render(now) {
+        const delta = Math.min(40,lastFrame ? now-lastFrame : 16.7);
+        lastFrame = now;
+        pointerX += (pointerTargetX-pointerX) * (1-Math.pow(.88,delta/16.7));
+        pointerY += (pointerTargetY-pointerY) * (1-Math.pow(.88,delta/16.7));
+        root.style.setProperty("--tilt-x",`${(-pointerY*.16).toFixed(2)}deg`);
+        root.style.setProperty("--tilt-y",`${(pointerX*.19).toFixed(2)}deg`);
+        const intro = reduceMotion.matches ? 1 : clamp((now-introStarted)/2050,0,1);
+        if (reduceMotion.matches || ambientTick++ % 2 === 0) drawAmbient(now/1000);
+        drawMark(now/1000,intro);
+        if (!reduceMotion.matches) animationFrame = requestAnimationFrame(render);
+      }
+
+      function replayIntro() {
+        if (reduceMotion.matches) return;
+        introStarted = performance.now();
+        delete root.dataset.docked;
+        clearTimeout(dockTimer);
+        root.dataset.replay = "true";
+        void document.body.offsetWidth;
+        delete root.dataset.replay;
+        dockTimer = setTimeout(() => { root.dataset.docked = "true"; }, 2800);
+      }
+      function motionChanged() {
+        cancelAnimationFrame(animationFrame);
+        lastFrame = 0;
+        if (reduceMotion.matches) render(performance.now()); else animationFrame = requestAnimationFrame(render);
+      }
+      addEventListener("pointermove", event => {
+        if (reduceMotion.matches) return;
+        pointerTargetX = ((event.clientX/innerWidth)-.5)*14;
+        pointerTargetY = ((event.clientY/innerHeight)-.5)*12;
+      }, {passive:true});
+      addEventListener("pointerleave", () => { pointerTargetX=0; pointerTargetY=0; }, {passive:true});
+      world.addEventListener("pointerdown", event => {
+        if (reduceMotion.matches || event.target.closest("a, button")) return;
+        const ring = document.createElement("span");
+        ring.className = "ripple";
+        ring.style.left = `${event.clientX}px`;
+        ring.style.top = `${event.clientY}px`;
+        ring.addEventListener("animationend", () => ring.remove(), {once:true});
+        world.append(ring);
+      }, {passive:true});
+      resizeAmbient();
+      if (reduceMotion.matches) root.dataset.docked = "true";
+      else dockTimer = setTimeout(() => { root.dataset.docked = "true"; }, 2800);
+      addEventListener("resize", resizeAmbient, {passive:true});
+      brandButton.addEventListener("click", replayIntro);
+      reduceMotion.addEventListener?.("change", motionChanged);
+      if (reduceMotion.matches) render(performance.now()); else animationFrame = requestAnimationFrame(render);
+    })();
+  </script>
 </body>
 </html>

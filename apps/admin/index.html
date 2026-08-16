@@ -550,6 +550,57 @@
     .publish-copy { min-width: 0; }
     .publish-copy strong { display: block; font-size: 13px; }
     .public-link { display: block; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
+    .invite-security-mark {
+      padding: 7px 10px;
+      border: 1px solid #cdd5c4;
+      border-radius: 999px;
+      color: #65705f;
+      background: #f5f7ef;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .12em;
+    }
+    .invite-generator {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+      margin-top: 14px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: linear-gradient(135deg, rgba(204,255,56,.12), rgba(255,255,255,.62));
+    }
+    .invite-label-field span { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 850; }
+    .invite-label-field small { color: var(--muted); font-weight: 500; }
+    .invite-label-field input { width: 100%; min-height: 46px; }
+    .invite-generate { min-height: 46px; white-space: nowrap; }
+    .invite-generate > span { margin-right: 5px; color: var(--lime); font-size: 17px; }
+    .invite-list { display: grid; gap: 7px; margin-top: 14px; }
+    .invite-empty { padding: 20px; border: 1px dashed #d4d8cf; border-radius: 12px; color: var(--muted); text-align: center; font-size: 12px; }
+    .invite-item {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 11px;
+      min-height: 58px;
+      padding: 9px 11px;
+      border: 1px solid #e4e5dd;
+      border-radius: 11px;
+      background: rgba(255,255,255,.64);
+    }
+    .invite-dot { width: 9px; height: 9px; border-radius: 50%; background: #9aa097; box-shadow: 0 0 0 4px rgba(154,160,151,.12); }
+    .invite-dot.active { background: #6b9a24; box-shadow: 0 0 0 4px rgba(107,154,36,.14); }
+    .invite-dot.used { background: #286f52; box-shadow: 0 0 0 4px rgba(40,111,82,.14); }
+    .invite-copy { min-width: 0; }
+    .invite-copy strong, .invite-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .invite-copy strong { font-size: 12px; }
+    .invite-copy small { margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .invite-status { padding: 5px 8px; border-radius: 999px; background: #eceee8; color: #697068; font-size: 10px; font-weight: 850; }
+    .invite-status.active { background: #eef7df; color: #557f16; }
+    .invite-status.used { background: #e3f1ea; color: #286f52; }
+    .invite-revoke { min-height: 40px; }
 
     .records-toolbar {
       display: flex;
@@ -698,6 +749,10 @@
       .panel-body { padding: 17px; }
       .publish-strip { grid-template-columns: auto 1fr; }
       .publish-strip .button-row { grid-column: 1 / -1; }
+      .invite-generator { grid-template-columns: 1fr; }
+      .invite-generate { width: 100%; }
+      .invite-item { grid-template-columns: auto minmax(0, 1fr) auto; }
+      .invite-revoke { grid-column: 2 / -1; width: 100%; }
       .records-toolbar, .table-foot { align-items: stretch; }
       .records-toolbar .button-row, .table-foot .button-row { width: 100%; }
       .records-toolbar button, .table-foot button { flex: 1; }
@@ -715,7 +770,7 @@
       <div class="login-copy">
         <div class="login-kicker">Matchday collection system</div>
         <h1>比赛日<span>控制台</span></h1>
-        <p>定制一场比赛的信息收集页，发布给购票人填写；所有规范数据实时进入安全数据库，可直接核对、修订与汇总。</p>
+        <p>定制一场比赛的信息收集页，发布给购票人填写；所有规范数据实时回到这台 Mac，可直接核对、修订与汇总。</p>
       </div>
       <div class="login-foot">PRIVATE OPERATIONS · AUTHORIZED ACCESS ONLY</div>
     </section>
@@ -829,14 +884,29 @@
           </section>
 
           <section class="panel-card">
+            <header class="panel-head">
+              <div><h3>客户专属链接</h3><p>一位客户一个链接；可一次填写多人，成功提交后立即失效。</p></div>
+              <span class="invite-security-mark">ONE · TIME</span>
+            </header>
             <div class="panel-body">
               <div id="publishStrip" class="publish-strip">
                 <span id="publishSymbol" class="publish-symbol">—</span>
-                <div class="publish-copy"><strong id="publishLabel">尚未发布</strong><span id="publicLinkText" class="public-link">发布后会生成公开填写链接</span></div>
+                <div class="publish-copy"><strong id="publishLabel">尚未发布</strong><span id="publicLinkText" class="public-link">发布后才可以生成客户专属链接</span></div>
                 <div class="button-row">
-                  <button id="openPublicBtn" class="secondary-button" type="button" disabled>预览页面</button>
-                  <button id="copyPublicBtn" class="primary-button" type="button" disabled>复制链接</button>
+                  <button id="openInviteBtn" class="secondary-button" type="button" disabled>打开刚生成链接</button>
                 </div>
+              </div>
+              <div class="invite-generator">
+                <label class="invite-label-field">
+                  <span>客户备注 <small>选填，仅管理员可见</small></span>
+                  <input id="inviteLabelInput" maxlength="100" autocomplete="off" placeholder="例如：王先生 / 微信尾号 8821" disabled />
+                </label>
+                <button id="generateInviteBtn" class="primary-button dark invite-generate" type="button" disabled>
+                  <span aria-hidden="true">＋</span> 生成并复制一次性链接
+                </button>
+              </div>
+              <div id="inviteList" class="invite-list" aria-live="polite">
+                <div class="invite-empty">还没有生成客户链接。</div>
               </div>
             </div>
           </section>
@@ -930,6 +1000,6 @@
   <script src="../vendor/exceljs.min.js"></script>
   <script src="../shared/ticket-template-export.js"></script>
   <script src="../../config/portal.config.js"></script>
-  <script src="./admin.js?v=20260811-username-tap"></script>
+  <script src="./admin.js?v=20260815-one-time-invites"></script>
 </body>
 </html>

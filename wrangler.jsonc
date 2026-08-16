@@ -3,8 +3,22 @@
   "name": "zouyihui-site",
   "main": "edge-gate.js",
   "compatibility_date": "2026-08-13",
-  "workers_dev": true,
+  "workers_dev": false,
   "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "gate-preview.zouyihui.me",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.zouyihui.me",
+      "custom_domain": true
+    },
+    {
+      "pattern": "zouyihui.me",
+      "custom_domain": true
+    }
+  ],
   "assets": {
     "directory": ".",
     "binding": "ASSETS",
@@ -13,7 +27,7 @@
     "not_found_handling": "404-page"
   },
   "secrets": {
-    "required": ["SITE_PASSWORD_HASH", "SITE_SESSION_SECRET"]
+    "required": ["SITE_PASSWORD_HASH", "SITE_SESSION_SECRET", "OWNER_BRIDGE_SECRET"]
   },
   "observability": {
     "enabled": true,

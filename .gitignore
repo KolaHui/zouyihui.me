@@ -1,0 +1,8 @@
+.DS_Store
+.env
+.wrangler/
+node_modules/
+*.db
+*.db-shm
+*.db-wal
+*.log
