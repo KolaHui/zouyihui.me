@@ -3,6 +3,7 @@
 .wrangler/
 .DS_Store
 .assetsignore
+.gitignore
 CNAME
 edge-gate.js
 tests/
