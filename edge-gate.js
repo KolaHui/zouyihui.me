@@ -310,7 +310,11 @@ function applySecurityHeaders(headers) {
   headers.set("Strict-Transport-Security", "max-age=86400; includeSubDomains");
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("X-Frame-Options", "DENY");
-  headers.set("Referrer-Policy", "no-referrer");
+  // `no-referrer` makes browsers serialize Origin as `null` for ordinary
+  // form POSTs, which defeats the strict same-origin login check below.
+  // `same-origin` keeps referrers off cross-site requests while preserving a
+  // verifiable Origin for the password form and logout POST.
+  headers.set("Referrer-Policy", "same-origin");
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
   headers.set("Content-Security-Policy", "frame-ancestors 'none'; base-uri 'self'; object-src 'none'");
 }

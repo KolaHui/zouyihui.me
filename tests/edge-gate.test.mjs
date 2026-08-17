@@ -62,6 +62,7 @@ assert.match(response.headers.get("content-security-policy"), /frame-ancestors '
 
 response = await worker.fetch(request("/__access?next=https://evil.example/steal"), env);
 assert.equal(response.status, 200);
+assert.equal(response.headers.get("referrer-policy"), "same-origin");
 const accessDocument = await response.text();
 assert.match(accessDocument, /name="next" value="\/"/);
 assert.match(accessDocument, /PERSONAL SPACE/);
@@ -71,6 +72,14 @@ response = await worker.fetch(formRequest("/__access/login", { password: "wrong"
 assert.equal(response.status, 401);
 assert.equal(response.headers.get("set-cookie"), null);
 assert.match(await response.text(), /访问密码不正确/);
+
+response = await worker.fetch(formRequest(
+  "/__access/login",
+  { password, next: "/personal/" },
+  { Origin: "null" },
+), env);
+assert.equal(response.status, 403);
+assert.match(await response.text(), /请求来源无法确认/);
 
 response = await worker.fetch(formRequest("/__access/login", { password, next: "/personal/" }), env);
 assert.equal(response.status, 303);
