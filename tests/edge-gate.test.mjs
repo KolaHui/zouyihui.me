@@ -60,6 +60,10 @@ assert.equal(response.status, 303);
 assert.equal(new URL(response.headers.get("location")).pathname, "/__access");
 assert.match(response.headers.get("content-security-policy"), /frame-ancestors 'none'/);
 
+response = await worker.fetch(request("/apps/notes/"), env);
+assert.equal(response.status, 303);
+assert.equal(new URL(response.headers.get("location")).pathname, "/__access");
+
 response = await worker.fetch(request("/__access?next=https://evil.example/steal"), env);
 assert.equal(response.status, 200);
 assert.equal(response.headers.get("referrer-policy"), "same-origin");
@@ -103,6 +107,13 @@ assert.equal(ownerLocation.pathname, "/apps/admin/");
 assert.match(ownerLocation.hash, /^#owner=v1\.[0-9]+\.[A-Za-z0-9_-]{32,64}\.[A-Za-z0-9_-]{40,48}$/);
 assert.equal(response.headers.get("cache-control"), "no-store");
 
+response = await worker.fetch(request("/__access/owner-notes", { headers: { Cookie: sessionCookie } }), env);
+assert.equal(response.status, 303);
+const notesLocation = new URL(response.headers.get("location"));
+assert.equal(notesLocation.pathname, "/apps/notes/");
+assert.match(notesLocation.hash, /^#owner=v1\.[0-9]+\.[A-Za-z0-9_-]{32,64}\.[A-Za-z0-9_-]{40,48}$/);
+assert.equal(response.headers.get("cache-control"), "no-store");
+
 const tamperedCookie = `${sessionCookie.slice(0, -1)}x`;
 response = await worker.fetch(request("/personal/", { headers: { Cookie: tamperedCookie } }), env);
 assert.equal(response.status, 303);
@@ -121,6 +132,7 @@ assert.equal(__test.isPublicAssetPath("/"), true);
 assert.equal(__test.isPublicAssetPath("/apps/portal/portal.js"), true);
 assert.equal(__test.isPublicAssetPath("/apps/admin/admin.js"), true);
 assert.equal(__test.isPublicAssetPath("/personal/"), false);
+assert.equal(__test.isPublicAssetPath("/apps/notes/"), false);
 assert.equal(__test.constantTimeEqual("same", "same"), true);
 assert.equal(__test.constantTimeEqual("same", "different"), false);
 

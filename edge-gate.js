@@ -46,6 +46,15 @@ async function handleRequest(request, env) {
     return ownerAdminRedirect(env, url);
   }
 
+  if (url.pathname === "/__access/owner-notes" && request.method === "GET") {
+    if (!(await hasValidSession(request, env))) {
+      const loginUrl = new URL("/__access", url);
+      loginUrl.searchParams.set("next", "/__access/owner-notes");
+      return secureResponse(Response.redirect(loginUrl.toString(), 303));
+    }
+    return ownerNotesRedirect(env, url);
+  }
+
   if (request.method !== "GET" && request.method !== "HEAD") {
     return jsonResponse(405, { error: "Method not allowed" }, { Allow: "GET, HEAD" });
   }
@@ -179,7 +188,7 @@ async function hmacSign(secret, payload) {
   return bytesToBase64Url(new Uint8Array(signature));
 }
 
-async function ownerAdminRedirect(env, url) {
+async function ownerAppRedirect(env, url, pathname) {
   const secret = String(env.OWNER_BRIDGE_SECRET || "");
   if (encoder.encode(secret).length < 32) {
     return htmlResponse(503, systemUnavailablePage());
@@ -188,13 +197,21 @@ async function ownerAdminRedirect(env, url) {
   const nonce = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(24)));
   const payload = `v1.${expiresAt}.${nonce}`;
   const assertion = `${payload}.${await hmacSign(secret, payload)}`;
-  const target = new URL("/apps/admin/", url);
+  const target = new URL(pathname, url);
   target.hash = `owner=${encodeURIComponent(assertion)}`;
   const headers = new Headers({
     Location: target.toString(),
     "Cache-Control": "no-store",
   });
   return secureResponse(new Response(null, { status: 303, headers }));
+}
+
+async function ownerAdminRedirect(env, url) {
+  return ownerAppRedirect(env, url, "/apps/admin/");
+}
+
+async function ownerNotesRedirect(env, url) {
+  return ownerAppRedirect(env, url, "/apps/notes/");
 }
 
 async function sha256Hex(bytes) {
@@ -680,6 +697,7 @@ export const __test = {
   safeNext,
   isPublicAssetPath,
   ownerAdminRedirect,
+  ownerNotesRedirect,
   constantTimeEqual,
   loginFailures,
 };
