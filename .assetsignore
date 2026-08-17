@@ -7,4 +7,5 @@
 CNAME
 edge-gate.js
 tests/
+templates/
 wrangler.jsonc
