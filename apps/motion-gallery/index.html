@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="一个滚动驱动的 3D 编辑画廊与卡片叙事动效实验。">
+  <meta name="theme-color" content="#f2f0e9">
+  <title>Forma — Motion Gallery</title>
+  <link rel="stylesheet" href="./styles.css?v=20260825-opt3">
+</head>
+<body>
+  <div class="intro" aria-hidden="true">
+    <div class="intro__mark">FORMA</div>
+    <div class="intro__line"></div>
+  </div>
+
+  <header class="chrome">
+    <a class="brand" href="#top" aria-label="返回顶部">
+      <span class="brand__disc"></span>
+      <span>FORMA<sup>07</sup></span>
+    </a>
+    <nav class="chrome__nav" aria-label="页面章节">
+      <a href="#orbit">环形画廊</a>
+      <a href="#story">滚动叙事</a>
+    </nav>
+    <div class="chrome__meta">SCROLL TO EXPLORE</div>
+  </header>
+
+  <main id="top">
+    <section class="opening" aria-labelledby="opening-title">
+      <p class="kicker">A STUDY IN PERSPECTIVE &amp; RHYTHM</p>
+      <h1 id="opening-title">Images become<br><em>space.</em></h1>
+      <div class="opening__footer">
+        <p>一组关于图像、距离与滚动节奏的网页实验。向下滚动，或在画廊中直接拖动。</p>
+        <span aria-hidden="true">↓</span>
+      </div>
+    </section>
+
+    <section class="orbit-story" id="orbit" aria-labelledby="orbit-heading">
+      <div class="orbit-stage" tabindex="0" aria-label="可拖动的三维环形画廊">
+        <div class="section-caption">
+          <span>01</span>
+          <h2 id="orbit-heading">A rotating<br>corridor of works.</h2>
+        </div>
+
+        <div class="orbit" aria-live="polite">
+          <article class="art-card" data-title="Afterlight" data-index="01">
+            <div class="poster poster--afterlight"><b>AFTER<br>LIGHT</b><i></i></div>
+          </article>
+          <article class="art-card" data-title="Nocturne" data-index="02">
+            <div class="poster poster--nocturne"><b>N°02</b><i></i></div>
+          </article>
+          <article class="art-card" data-title="Cut Paper" data-index="03">
+            <div class="poster poster--paper"><b>CUT<br>PAPER</b><i></i></div>
+          </article>
+          <article class="art-card" data-title="Auburn" data-index="04">
+            <div class="poster poster--auburn"><b>AUBURN</b><i></i></div>
+          </article>
+          <article class="art-card" data-title="Signal" data-index="05">
+            <div class="poster poster--signal"><b>SIGNAL</b><i></i></div>
+          </article>
+          <article class="art-card" data-title="Monument" data-index="06">
+            <div class="poster poster--monument"><b>MONU<br>MENT</b><i></i></div>
+          </article>
+          <article class="art-card" data-title="Liminal" data-index="07">
+            <div class="poster poster--liminal"><b>LIMINAL</b><i></i></div>
+          </article>
+          <article class="art-card" data-title="Deep Field" data-index="08">
+            <div class="poster poster--deep"><b>DEEP<br>FIELD</b><i></i></div>
+          </article>
+          <article class="art-card" data-title="Pulse" data-index="09">
+            <div class="poster poster--pulse"><b>PULSE</b><i></i></div>
+          </article>
+          <article class="art-card" data-title="Still Life" data-index="10">
+            <div class="poster poster--still"><b>STILL<br>LIFE</b><i></i></div>
+          </article>
+          <article class="art-card" data-title="Salt" data-index="11">
+            <div class="poster poster--salt"><b>SALT</b><i></i></div>
+          </article>
+          <article class="art-card" data-title="Future Form" data-index="12">
+            <div class="poster poster--future"><b>FUTURE<br>FORM</b><i></i></div>
+          </article>
+        </div>
+
+        <div class="orbit-hud">
+          <span class="orbit-hud__number">01 / 12</span>
+          <strong class="orbit-hud__title">Afterlight</strong>
+          <span class="orbit-hud__hint">DRAG / SCROLL</span>
+        </div>
+        <div class="orbit-progress" aria-hidden="true"><i></i></div>
+      </div>
+    </section>
+
+    <section class="interlude" aria-label="章节过渡">
+      <p>Every image is a moment.<br>Every transition is a sentence.</p>
+      <span>02 — CHOREOGRAPHY</span>
+    </section>
+
+    <section class="stack-story" id="story" aria-labelledby="story-heading">
+      <div class="stack-stage">
+        <div class="story-copy">
+          <span class="story-copy__number">02</span>
+          <div class="story-copy__block" data-copy="0">
+            <p class="kicker">A SEQUENCE OF SEVEN</p>
+            <h2 id="story-heading">Every wonderful<br>moment of surprise.</h2>
+          </div>
+          <div class="story-copy__block" data-copy="1">
+            <p class="kicker">A PORTRAIT IN MOTION</p>
+            <h2>The moment you<br>look forward to.</h2>
+            <p class="story-copy__body">卡片从同一个空间原点生长，展开时保持连续的方向与速度。</p>
+          </div>
+          <div class="story-copy__block" data-copy="2">
+            <p class="kicker">COLLECTED / 2026</p>
+            <h2>Your talent deserves<br>to be recognized.</h2>
+            <p class="story-copy__body">滚动不是翻页，而是一条可以前进、暂停、倒放的时间轴。</p>
+          </div>
+        </div>
+
+        <div class="story-deck" aria-hidden="true">
+          <article class="story-card story-card--1"><span>01</span><b>SOFT<br>EDGE</b></article>
+          <article class="story-card story-card--2"><span>02</span><b>NEW<br>RITUAL</b></article>
+          <article class="story-card story-card--3"><span>03</span><b>PER<br>CEPTION</b></article>
+          <article class="story-card story-card--4"><span>04</span><b>FORMA</b></article>
+          <article class="story-card story-card--5"><span>05</span><b>ABSENT<br>LIGHT</b></article>
+          <article class="story-card story-card--6"><span>06</span><b>RHYTHM</b></article>
+          <article class="story-card story-card--7"><span>07</span><b>OPEN<br>FIELD</b></article>
+        </div>
+
+        <div class="story-counter" aria-hidden="true">
+          <span>01</span><i></i><span>04</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing">
+      <p class="kicker">END OF STUDY / BEGINNING OF PLAY</p>
+      <h2>Still images.<br><em>Alive.</em></h2>
+      <a href="#top">REPLAY THE SEQUENCE <span>↗</span></a>
+      <footer>
+        <span>FORMA MOTION STUDY</span>
+        <span>LOCAL / NO DEPENDENCIES</span>
+        <span>2026</span>
+      </footer>
+    </section>
+  </main>
+
+  <noscript>这个动效页面需要启用 JavaScript。</noscript>
+  <script src="./main.js?v=20260825-opt3"></script>
+</body>
+</html>

@@ -63,9 +63,8 @@
       z-index: 4;
       inset: 0;
       pointer-events: none;
-      opacity: .11;
+      opacity: .055;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.15'/%3E%3C/svg%3E");
-      mix-blend-mode: soft-light;
     }
     .ambient-canvas {
       position: absolute;
@@ -74,6 +73,7 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
+      contain: strict;
     }
     .brand-stage {
       position: fixed;
@@ -86,6 +86,7 @@
       animation: dock-logo 2.8s cubic-bezier(.2,.83,.24,1) both;
       will-change: transform;
     }
+    html[data-docked="true"] .brand-stage { will-change: auto; }
     .brand-button {
       position: relative;
       display: grid;
@@ -125,13 +126,13 @@
       transform: perspective(600px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
       transform-style: preserve-3d;
       transition: transform 120ms linear;
-      will-change: transform;
+      will-change: auto;
     }
+    html[data-rendering="true"] .mark-tilt { will-change: transform; }
     .mark-canvas {
       display: block;
       width: 100%;
       height: 100%;
-      filter: drop-shadow(0 8px 10px rgba(20,113,163,.13));
     }
     .entry-nav {
       position: fixed;
@@ -252,7 +253,7 @@
     <canvas class="ambient-canvas" id="ambientCanvas" aria-hidden="true"></canvas>
     <div class="brand-stage">
       <button class="brand-button" id="brandButton" type="button" aria-label="重新播放标志动画">
-        <span class="mark-tilt"><canvas class="mark-canvas" id="markCanvas" width="480" height="480" aria-hidden="true"></canvas></span>
+        <span class="mark-tilt"><canvas class="mark-canvas" id="markCanvas" width="192" height="192" aria-hidden="true"></canvas></span>
       </button>
     </div>
     <nav class="entry-nav" id="entryNav" aria-label="主页入口">
@@ -266,6 +267,7 @@
       const root = document.documentElement;
       const world = document.querySelector(".world");
       const brandButton = document.getElementById("brandButton");
+      const markTilt = document.querySelector(".mark-tilt");
       const markCanvas = document.getElementById("markCanvas");
       const ambientCanvas = document.getElementById("ambientCanvas");
       const markContext = markCanvas.getContext("2d", { alpha: true });
@@ -274,19 +276,29 @@
       let introStarted = performance.now();
       let width = 0, height = 0, ratio = 1;
       let pointerTargetX = 0, pointerTargetY = 0, pointerX = 0, pointerY = 0;
-      let lastFrame = 0, animationFrame = 0, dockTimer = 0, ambientTick = 0;
+      let lastRender = 0, animationFrame = 0, dockTimer = 0, ambientDirty = true;
+      const diagnostics = new URLSearchParams(location.search).has("perf");
+      const stats = { callbacks: 0, frames: 0, skippedCallbacks: 0, markDraws: 0, ambientDraws: 0 };
       const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
       const smoothstep = (edge0, edge1, value) => { const x = clamp((value - edge0) / (edge1 - edge0), 0, 1); return x * x * (3 - 2 * x); };
+      markContext.setTransform(.4, 0, 0, .4, 0, 0);
+
+      function scheduleRender() {
+        if (animationFrame || document.hidden || reduceMotion.matches) return;
+        root.dataset.rendering = "true";
+        animationFrame = requestAnimationFrame(render);
+      }
 
       function resizeAmbient() {
         width = innerWidth;
         height = innerHeight;
-        ratio = Math.min(devicePixelRatio || 1, 1.35);
+        ratio = 1;
         ambientCanvas.width = Math.round(width * ratio);
         ambientCanvas.height = Math.round(height * ratio);
         ambientCanvas.style.width = `${width}px`;
         ambientCanvas.style.height = `${height}px`;
         ambientContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ambientDirty = true;
       }
 
       function catmullRom(points, samples = 14) {
@@ -386,30 +398,48 @@
       function drawAmbient(seconds) {
         const context = ambientContext;
         context.clearRect(0,0,width,height);
-        context.globalCompositeOperation = "multiply";
         [
           {y:height*.28,a:Math.max(38,height*.08),p:.4,c:"rgba(73,205,221,.075)",w:Math.max(58,height*.085),r:false},
           {y:height*.58,a:Math.max(45,height*.1),p:2.5,c:"rgba(48,145,214,.054)",w:Math.max(76,height*.11),r:true},
           {y:height*.79,a:Math.max(30,height*.07),p:4.1,c:"rgba(255,198,215,.04)",w:Math.max(50,height*.07),r:false}
         ].forEach(ribbon => {
           const path = ambientPath(ribbon.y,ribbon.a,ribbon.p,seconds,ribbon.r);
-          strokeCurve(context,path,1,ribbon.c,ribbon.w,8);
+          strokeCurve(context,path,1,ribbon.c,ribbon.w);
           strokeCurve(context,path.map(point => ({x:point.x,y:point.y-ribbon.w*.16})),1,"rgba(255,255,255,.25)",1.1);
         });
-        context.globalCompositeOperation = "source-over";
+        stats.ambientDraws += 1;
       }
 
       function render(now) {
-        const delta = Math.min(40,lastFrame ? now-lastFrame : 16.7);
-        lastFrame = now;
-        pointerX += (pointerTargetX-pointerX) * (1-Math.pow(.88,delta/16.7));
-        pointerY += (pointerTargetY-pointerY) * (1-Math.pow(.88,delta/16.7));
-        root.style.setProperty("--tilt-x",`${(-pointerY*.16).toFixed(2)}deg`);
-        root.style.setProperty("--tilt-y",`${(pointerX*.19).toFixed(2)}deg`);
+        animationFrame = 0;
+        stats.callbacks += 1;
+        if (lastRender && now - lastRender < 30) {
+          stats.skippedCallbacks += 1;
+          scheduleRender();
+          return;
+        }
+
+        const delta = Math.min(50,lastRender ? now-lastRender : 33.3);
+        lastRender = now;
+        stats.frames += 1;
+        const response = 1-Math.pow(.76,delta/33.3);
+        pointerX += (pointerTargetX-pointerX) * response;
+        pointerY += (pointerTargetY-pointerY) * response;
+        markTilt.style.transform = `perspective(600px) rotateX(${(-pointerY*.16).toFixed(2)}deg) rotateY(${(pointerX*.19).toFixed(2)}deg)`;
         const intro = reduceMotion.matches ? 1 : clamp((now-introStarted)/2050,0,1);
-        if (reduceMotion.matches || ambientTick++ % 2 === 0) drawAmbient(now/1000);
+        const pointerMoving = Math.abs(pointerTargetX-pointerX) > .015 || Math.abs(pointerTargetY-pointerY) > .015;
+        if (ambientDirty || pointerMoving) {
+          drawAmbient(now/1000);
+          ambientDirty = false;
+        }
         drawMark(now/1000,intro);
-        if (!reduceMotion.matches) animationFrame = requestAnimationFrame(render);
+        stats.markDraws += 1;
+        if (intro < 1 || pointerMoving) {
+          scheduleRender();
+        } else {
+          lastRender = 0;
+          delete root.dataset.rendering;
+        }
       }
 
       function replayIntro() {
@@ -421,18 +451,34 @@
         void document.body.offsetWidth;
         delete root.dataset.replay;
         dockTimer = setTimeout(() => { root.dataset.docked = "true"; }, 2800);
+        ambientDirty = true;
+        scheduleRender();
       }
       function motionChanged() {
         cancelAnimationFrame(animationFrame);
-        lastFrame = 0;
-        if (reduceMotion.matches) render(performance.now()); else animationFrame = requestAnimationFrame(render);
+        animationFrame = 0;
+        lastRender = 0;
+        ambientDirty = true;
+        if (reduceMotion.matches) {
+          render(performance.now());
+          delete root.dataset.rendering;
+        } else {
+          scheduleRender();
+        }
       }
       addEventListener("pointermove", event => {
         if (reduceMotion.matches) return;
         pointerTargetX = ((event.clientX/innerWidth)-.5)*14;
         pointerTargetY = ((event.clientY/innerHeight)-.5)*12;
+        ambientDirty = true;
+        scheduleRender();
       }, {passive:true});
-      addEventListener("pointerleave", () => { pointerTargetX=0; pointerTargetY=0; }, {passive:true});
+      addEventListener("pointerleave", () => {
+        pointerTargetX=0;
+        pointerTargetY=0;
+        ambientDirty = true;
+        scheduleRender();
+      }, {passive:true});
       world.addEventListener("pointerdown", event => {
         if (reduceMotion.matches || event.target.closest("a, button")) return;
         const ring = document.createElement("span");
@@ -445,10 +491,24 @@
       resizeAmbient();
       if (reduceMotion.matches) root.dataset.docked = "true";
       else dockTimer = setTimeout(() => { root.dataset.docked = "true"; }, 2800);
-      addEventListener("resize", resizeAmbient, {passive:true});
+      addEventListener("resize", () => { resizeAmbient(); scheduleRender(); }, {passive:true});
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          cancelAnimationFrame(animationFrame);
+          animationFrame = 0;
+          lastRender = 0;
+          delete root.dataset.rendering;
+        } else {
+          ambientDirty = true;
+          scheduleRender();
+        }
+      });
       brandButton.addEventListener("click", replayIntro);
       reduceMotion.addEventListener?.("change", motionChanged);
-      if (reduceMotion.matches) render(performance.now()); else animationFrame = requestAnimationFrame(render);
+      if (diagnostics) {
+        window.__homeMotionDiagnostics = () => ({ ...stats, rafRunning: Boolean(animationFrame), rendering: root.dataset.rendering === "true" });
+      }
+      if (reduceMotion.matches) render(performance.now()); else scheduleRender();
     })();
   </script>
 </body>
