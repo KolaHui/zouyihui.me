@@ -6,3 +6,6 @@ node_modules/
 *.db-shm
 *.db-wal
 *.log
+
+# Private study copy: deploy from this Mac only; never publish to the public repository.
+apps/private-jet-study/

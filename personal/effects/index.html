@@ -77,12 +77,22 @@
     .flow-preview .shadow { stroke: rgba(19,101,160,.12); stroke-width: 22; }
     .flow-preview .river { stroke: url(#river); stroke-width: 13; }
     .flow-preview .light { stroke: rgba(255,255,255,.72); stroke-width: 2; stroke-dasharray: 34 72; }
+    .work.study { grid-column: 1 / -1; min-height: clamp(330px, 39vw, 470px); }
+    .jet-preview { display: grid; place-items: center; background: linear-gradient(180deg, #d9e2e7 0 57%, #bfc9cc 57% 58%, #61686a 58% 100%); }
+    .jet-preview::before { position: absolute; inset: 0; content: ""; background: linear-gradient(107deg, transparent 0 47%, rgba(255,255,255,.22) 47.2% 47.5%, transparent 47.7%), radial-gradient(circle at 74% 20%, rgba(255,255,255,.72), transparent 24%); }
+    .jet { position: relative; width: min(62%, 580px); height: 34%; transform: rotate(-4deg); }
+    .jet-body { position: absolute; top: 42%; left: 4%; width: 89%; height: 25%; border-radius: 70% 14% 34% 68%; background: linear-gradient(#fafbfa 0 48%, #aab3b6 49% 63%, #e7e9e8 64%); box-shadow: 0 18px 26px rgba(16,22,23,.2); }
+    .jet-body::after { position: absolute; top: 20%; right: 11%; width: 18%; height: 12%; border-radius: 999px; background: repeating-linear-gradient(90deg, #34434b 0 9%, transparent 10% 21%); content: ""; }
+    .jet-wing { position: absolute; left: 33%; top: 47%; width: 48%; height: 30%; background: #d6dadb; clip-path: polygon(0 0, 100% 55%, 91% 82%, 15% 43%); }
+    .jet-tail { position: absolute; left: 7%; top: 16%; width: 22%; height: 39%; background: #edf0ef; clip-path: polygon(0 100%, 55% 0, 100% 100%); }
+    .private-mark { position: absolute; z-index: 2; right: 18px; top: 18px; padding: 8px 10px; border: 1px solid rgba(17,17,15,.35); color: rgba(17,17,15,.68); background: rgba(240,238,231,.55); font: 600 9px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
     footer { display: flex; justify-content: space-between; gap: 20px; margin-top: 42px; padding-top: 14px; border-top: 1px solid rgba(240,238,231,.15); color: rgba(240,238,231,.36); font: 600 9px/1.5 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
     @media (max-width: 760px) {
       .shell { width: min(100% - 24px, 1180px); }
       header { grid-template-columns: 1fr; gap: 28px; }
       .gallery { grid-template-columns: 1fr; }
       .work { min-height: 470px; }
+      .work.study { grid-column: auto; min-height: 410px; }
     }
     @media (max-width: 460px) { .work { min-height: 390px; } footer { flex-direction: column; } }
     @media (prefers-reduced-motion: reduce) { .work { transition: none; } .work:hover { transform: none; } }
@@ -96,7 +106,7 @@
     </nav>
     <header>
       <div>
-        <p class="kicker">Motion studies / 02</p>
+        <p class="kicker">Motion studies / 03</p>
         <h1>特效<br>网页</h1>
       </div>
       <p class="lede">这里收录独立的网页动效实验。预览保持静态，只有进入作品后才启动动画，避免入口页面同时消耗图形性能。</p>
@@ -104,7 +114,7 @@
     <section class="gallery" aria-label="动效作品">
       <a class="work" href="../../apps/motion-gallery/">
         <div class="preview orbit-preview" aria-hidden="true"><div class="orbit-line"><i class="mini"></i><i class="mini"></i><i class="mini"></i><i class="mini"></i><i class="mini"></i></div></div>
-        <div class="work-meta"><div class="work-row"><span class="work-source">Codex · Scroll / Drag</span><span class="work-index">01 / 02</span></div><h2>旋转作品长廊</h2></div>
+        <div class="work-meta"><div class="work-row"><span class="work-source">Codex · Scroll / Drag</span><span class="work-index">01 / 03</span></div><h2>旋转作品长廊</h2></div>
       </a>
       <a class="work" href="../../">
         <div class="preview flow-preview" aria-hidden="true">
@@ -115,7 +125,11 @@
             <path class="light" d="M52 126C122 62 231 83 338 123C322 185 254 196 205 238C156 280 112 317 172 346C233 375 318 352 375 304"/>
           </svg>
         </div>
-        <div class="work-meta"><div class="work-row"><span class="work-source">Claude · Canvas / Pointer</span><span class="work-index">02 / 02</span></div><h2>流体标志场景</h2></div>
+        <div class="work-meta"><div class="work-row"><span class="work-source">Claude · Canvas / Pointer</span><span class="work-index">02 / 03</span></div><h2>流体标志场景</h2></div>
+      </a>
+      <a class="work study" href="../../apps/private-jet-study/">
+        <div class="preview jet-preview" aria-hidden="true"><span class="private-mark">Private study</span><div class="jet"><i class="jet-tail"></i><i class="jet-wing"></i><i class="jet-body"></i></div></div>
+        <div class="work-meta"><div class="work-row"><span class="work-source">Local archive · Scroll / WebGL</span><span class="work-index">03 / 03</span></div><h2>Jet Motion Study</h2></div>
       </a>
     </section>
     <footer><span>ZOUYIHUI.ME · Private motion archive</span><span>Idle pages render zero animation frames</span></footer>

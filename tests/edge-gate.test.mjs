@@ -64,6 +64,10 @@ response = await worker.fetch(request("/apps/notes/"), env);
 assert.equal(response.status, 303);
 assert.equal(new URL(response.headers.get("location")).pathname, "/__access");
 
+response = await worker.fetch(request("/apps/private-jet-study/"), env);
+assert.equal(response.status, 303);
+assert.equal(new URL(response.headers.get("location")).pathname, "/__access");
+
 response = await worker.fetch(request("/__access?next=https://evil.example/steal"), env);
 assert.equal(response.status, 200);
 assert.equal(response.headers.get("referrer-policy"), "same-origin");
@@ -100,6 +104,13 @@ assert.equal(response.status, 200);
 assert.equal(await response.text(), "asset:/personal/");
 assert.equal(response.headers.get("cache-control"), "private, no-store");
 
+response = await worker.fetch(request("/apps/private-jet-study/", { headers: { Cookie: sessionCookie } }), env);
+assert.equal(response.status, 200);
+assert.equal(response.headers.get("cache-control"), "private, no-store");
+assert.equal(response.headers.get("x-robots-tag"), "noindex, nofollow, noarchive");
+assert.match(response.headers.get("content-security-policy"), /connect-src 'self'/);
+assert.match(response.headers.get("content-security-policy"), /form-action 'none'/);
+
 response = await worker.fetch(request("/__access/owner-admin", { headers: { Cookie: sessionCookie } }), env);
 assert.equal(response.status, 303);
 const ownerLocation = new URL(response.headers.get("location"));
@@ -133,6 +144,8 @@ assert.equal(__test.isPublicAssetPath("/apps/portal/portal.js"), true);
 assert.equal(__test.isPublicAssetPath("/apps/admin/admin.js"), true);
 assert.equal(__test.isPublicAssetPath("/personal/"), false);
 assert.equal(__test.isPublicAssetPath("/apps/notes/"), false);
+assert.equal(__test.isPrivateStudyPath("/apps/private-jet-study/assets/core.js"), true);
+assert.equal(__test.isPrivateStudyPath("/apps/motion-gallery/"), false);
 assert.equal(__test.constantTimeEqual("same", "same"), true);
 assert.equal(__test.constantTimeEqual("same", "different"), false);
 

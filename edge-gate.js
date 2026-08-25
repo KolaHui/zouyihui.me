@@ -78,7 +78,7 @@ async function handleRequest(request, env) {
   }
 
   const assetResponse = await env.ASSETS.fetch(request);
-  return secureAssetResponse(assetResponse);
+  return secureAssetResponse(assetResponse, url.pathname);
 }
 
 async function handleLogin(request, env, url) {
@@ -303,10 +303,21 @@ function bytesToBase64Url(bytes) {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function secureAssetResponse(response) {
+function isPrivateStudyPath(pathname) {
+  return pathname === "/apps/private-jet-study" || pathname === "/apps/private-jet-study/" || pathname.startsWith("/apps/private-jet-study/");
+}
+
+function secureAssetResponse(response, pathname = "") {
   const headers = new Headers(response.headers);
   headers.set("Cache-Control", "private, no-store");
   applySecurityHeaders(headers);
+  if (isPrivateStudyPath(pathname)) {
+    headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+    headers.set(
+      "Content-Security-Policy",
+      "default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; frame-src 'none'; form-action 'none'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+    );
+  }
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
@@ -696,6 +707,7 @@ export const __test = {
   handleRequest,
   safeNext,
   isPublicAssetPath,
+  isPrivateStudyPath,
   ownerAdminRedirect,
   ownerNotesRedirect,
   constantTimeEqual,
