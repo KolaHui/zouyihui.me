@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#100d0a">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="七月十五中元夜，把未说完的话，安静地寄给思念的人。">
+  <title>云寄 · 中元云烧纸</title>
+  <link rel="icon" href="../../assets/mark.svg" type="image/svg+xml">
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;500;600;700&display=swap");
+
+    :root {
+      color-scheme: dark;
+      font-family: "Noto Serif SC", "Songti SC", STSong, serif;
+      font-synthesis: none;
+      --paper: #d8c7a7;
+      --paper-dim: #9f9078;
+      --ink: #16110c;
+      --night: #100d0a;
+      --night-deep: #080706;
+      --gold: #d8a64d;
+      --gold-bright: #ffd783;
+      --ember: #d85824;
+      --line: rgba(216, 199, 167, .17);
+      --panel: rgba(26, 21, 16, .72);
+      --serif: "Noto Serif SC", "Songti SC", STSong, serif;
+      --brush: "Ma Shan Zheng", "FZKai-Z03", "Kaiti SC", cursive;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--night-deep); }
+    body {
+      min-width: 320px;
+      min-height: 100%;
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--paper);
+      background:
+        radial-gradient(circle at 50% 30%, rgba(101, 56, 28, .18), transparent 28rem),
+        linear-gradient(180deg, #17120e 0%, var(--night) 42%, #090807 100%);
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      pointer-events: none;
+      opacity: .16;
+      mix-blend-mode: soft-light;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.48'/%3E%3C/svg%3E");
+    }
+
+    button, input, textarea { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    a { color: inherit; }
+
+    .skip-link {
+      position: fixed;
+      z-index: 100;
+      top: 12px;
+      left: 50%;
+      padding: 9px 14px;
+      border-radius: 999px;
+      color: #23170c;
+      background: var(--gold-bright);
+      transform: translate(-50%, -180%);
+      transition: transform 180ms ease;
+    }
+    .skip-link:focus { transform: translate(-50%, 0); }
+
+    .night-sky {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .moon {
+      position: absolute;
+      top: clamp(94px, 15vh, 170px);
+      left: 50%;
+      width: clamp(250px, 38vw, 520px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      opacity: .18;
+      background:
+        radial-gradient(circle at 43% 38%, rgba(245, 225, 184, .78), transparent 8%),
+        radial-gradient(circle at 58% 55%, rgba(40, 31, 23, .42), transparent 18%),
+        radial-gradient(circle, #e8cf9f 0 55%, transparent 56%);
+      filter: blur(.3px);
+      transform: translateX(-50%);
+      box-shadow: 0 0 80px rgba(225, 177, 96, .2), 0 0 220px rgba(225, 177, 96, .09);
+    }
+    .mountains {
+      position: absolute;
+      right: -8%;
+      bottom: 0;
+      left: -8%;
+      height: 46vh;
+      opacity: .46;
+      background:
+        linear-gradient(148deg, transparent 0 27%, rgba(4, 5, 5, .75) 27.3% 49%, transparent 49.3%) 0 100% / 62% 85% no-repeat,
+        linear-gradient(215deg, transparent 0 36%, rgba(7, 7, 6, .78) 36.3% 62%, transparent 62.3%) 100% 100% / 72% 100% no-repeat;
+      filter: blur(1px);
+    }
+    .stars { position: absolute; inset: 0; }
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      opacity: .35;
+      background: #e9d2a5;
+      animation: breathe 4s ease-in-out infinite alternate;
+    }
+    .star:nth-child(1) { top: 12%; left: 14%; animation-delay: -1s; }
+    .star:nth-child(2) { top: 23%; left: 80%; animation-delay: -3s; }
+    .star:nth-child(3) { top: 42%; left: 8%; animation-delay: -2s; }
+    .star:nth-child(4) { top: 8%; left: 68%; animation-delay: -.5s; }
+    .star:nth-child(5) { top: 33%; left: 91%; animation-delay: -2.6s; }
+
+    .topbar {
+      position: relative;
+      z-index: 30;
+      display: flex;
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: max(20px, env(safe-area-inset-top)) 0 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .back {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      gap: 9px;
+      color: rgba(216, 199, 167, .65);
+      font-size: 13px;
+      letter-spacing: .08em;
+      text-decoration: none;
+      transition: color 180ms ease;
+    }
+    .back::before {
+      content: "";
+      width: 18px;
+      height: 1px;
+      background: currentColor;
+      box-shadow: -1px -4px 0 -0.2px currentColor;
+      transform: rotate(-45deg) scaleX(.55);
+      transform-origin: left center;
+    }
+    .back:hover { color: var(--gold-bright); }
+    .date-mark { color: rgba(216, 199, 167, .46); font-size: 11px; letter-spacing: .24em; }
+
+    .hero {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      min-height: 58vh;
+      place-items: center;
+      padding: clamp(72px, 12vh, 132px) 24px 72px;
+      text-align: center;
+    }
+    .hero-inner { animation: rise-in 1.2s cubic-bezier(.2,.75,.2,1) both; }
+    .seal {
+      display: grid;
+      width: 34px;
+      height: 42px;
+      margin: 0 auto 26px;
+      border: 1px solid rgba(211, 75, 40, .65);
+      color: rgba(226, 102, 60, .82);
+      place-items: center;
+      font-family: var(--brush);
+      font-size: 14px;
+      line-height: 1;
+      writing-mode: vertical-rl;
+      transform: rotate(3deg);
+    }
+    .festival {
+      margin: 0 0 14px;
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .5em;
+      text-indent: .5em;
+    }
+    h1 {
+      margin: 0;
+      color: #e8d8b9;
+      font-family: var(--brush);
+      font-size: clamp(70px, 12vw, 150px);
+      font-weight: 400;
+      line-height: .92;
+      letter-spacing: .06em;
+      text-shadow: 0 4px 40px rgba(212, 158, 70, .16);
+    }
+    .hero-copy {
+      max-width: 490px;
+      margin: 28px auto 0;
+      color: rgba(216, 199, 167, .6);
+      font-size: clamp(14px, 2vw, 17px);
+      line-height: 2;
+      letter-spacing: .12em;
+    }
+    .scroll-cue {
+      display: inline-flex;
+      margin-top: 45px;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: rgba(216, 199, 167, .34);
+      font-size: 10px;
+      letter-spacing: .25em;
+      text-decoration: none;
+    }
+    .scroll-cue::after {
+      content: "";
+      width: 1px;
+      height: 42px;
+      background: linear-gradient(var(--gold), transparent);
+      animation: cue 2.2s ease-in-out infinite;
+      transform-origin: top;
+    }
+
+    .ritual-shell {
+      position: relative;
+      z-index: 3;
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding-bottom: 110px;
+    }
+    .ritual-shell::before {
+      content: "";
+      position: absolute;
+      top: -70px;
+      left: 50%;
+      width: min(80vw, 880px);
+      height: 260px;
+      pointer-events: none;
+      background: radial-gradient(ellipse, rgba(183, 90, 30, .12), transparent 68%);
+      transform: translateX(-50%);
+    }
+    .ritual-grid {
+      display: grid;
+      grid-template-columns: minmax(300px, .9fr) minmax(390px, 1.25fr);
+      border: 1px solid var(--line);
+      background: rgba(14, 12, 10, .62);
+      box-shadow: 0 50px 120px rgba(0, 0, 0, .34), inset 0 1px rgba(255, 255, 255, .025);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .letter-panel { padding: clamp(28px, 5vw, 58px); border-right: 1px solid var(--line); }
+    .section-no { color: rgba(216, 166, 77, .7); font-size: 10px; letter-spacing: .25em; }
+    h2 {
+      margin: 12px 0 8px;
+      color: #e4d4b6;
+      font-family: var(--brush);
+      font-size: clamp(32px, 5vw, 49px);
+      font-weight: 400;
+      letter-spacing: .08em;
+    }
+    .section-note { margin: 0 0 28px; color: rgba(216, 199, 167, .47); font-size: 12px; line-height: 1.8; }
+    .field { display: block; margin-top: 18px; }
+    .field-label {
+      display: flex;
+      margin: 0 0 9px;
+      align-items: baseline;
+      justify-content: space-between;
+      color: rgba(216, 199, 167, .64);
+      font-size: 12px;
+      letter-spacing: .14em;
+    }
+    .optional { color: rgba(216, 199, 167, .3); font-size: 10px; letter-spacing: .08em; }
+    input, textarea {
+      width: 100%;
+      border: 0;
+      border-bottom: 1px solid rgba(216, 199, 167, .16);
+      border-radius: 0;
+      outline: none;
+      color: #eadcbe;
+      background: transparent;
+      transition: border-color 180ms ease, background 180ms ease;
+    }
+    input { height: 46px; padding: 0 2px; }
+    textarea {
+      min-height: 128px;
+      padding: 12px 2px;
+      resize: vertical;
+      line-height: 1.9;
+    }
+    input::placeholder, textarea::placeholder { color: rgba(216, 199, 167, .22); }
+    input:focus, textarea:focus { border-color: rgba(216, 166, 77, .65); background: linear-gradient(180deg, transparent, rgba(216, 166, 77, .025)); }
+    .counter { display: block; margin-top: 7px; color: rgba(216, 199, 167, .28); font-size: 10px; text-align: right; }
+
+    .offer-title { margin: 30px 0 13px; color: rgba(216, 199, 167, .64); font-size: 12px; font-weight: 400; letter-spacing: .14em; }
+    .offerings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .offering {
+      position: relative;
+      min-height: 92px;
+      padding: 14px 8px 11px;
+      border: 1px solid rgba(216, 199, 167, .1);
+      border-radius: 2px;
+      color: rgba(216, 199, 167, .52);
+      background: rgba(255, 255, 255, .012);
+      cursor: pointer;
+      transition: border-color 180ms ease, color 180ms ease, background 180ms ease, transform 180ms ease;
+    }
+    .offering:hover { color: var(--paper); border-color: rgba(216, 166, 77, .32); transform: translateY(-2px); }
+    .offering[aria-pressed="true"] { color: var(--gold-bright); border-color: rgba(216, 166, 77, .7); background: rgba(216, 166, 77, .07); }
+    .offering-mark { display: block; height: 36px; font-family: var(--brush); font-size: 28px; line-height: 1; }
+    .offering-name { display: block; font-size: 11px; letter-spacing: .08em; }
+
+    .privacy-note {
+      display: flex;
+      margin-top: 22px;
+      align-items: flex-start;
+      gap: 8px;
+      color: rgba(216, 199, 167, .36);
+      font-size: 10px;
+      line-height: 1.6;
+    }
+    .privacy-note::before { content: "◇"; color: rgba(216, 166, 77, .55); }
+
+    .fire-panel {
+      position: relative;
+      display: flex;
+      min-height: 660px;
+      overflow: hidden;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 50% 58%, rgba(185, 72, 20, .15), transparent 28%),
+        radial-gradient(circle at 50% 105%, rgba(216, 166, 77, .08), transparent 48%);
+    }
+    .fire-panel::before, .fire-panel::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      width: 1px;
+      height: 100%;
+      top: 0;
+      background: linear-gradient(transparent, rgba(216, 199, 167, .09), transparent);
+    }
+    .fire-panel::before { left: 23%; }
+    .fire-panel::after { right: 23%; }
+    #embers {
+      position: absolute;
+      z-index: 4;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .incense-smoke {
+      position: absolute;
+      z-index: 1;
+      top: 6%;
+      left: 50%;
+      width: 80px;
+      height: 250px;
+      opacity: .28;
+      filter: blur(6px);
+      transform: translateX(-50%);
+    }
+    .smoke-line {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 16px;
+      height: 200px;
+      border-left: 2px solid rgba(212, 206, 190, .45);
+      border-radius: 50%;
+      animation: smoke 7s ease-in-out infinite;
+      transform-origin: bottom;
+    }
+    .smoke-line:nth-child(2) { height: 180px; animation-delay: -3.1s; transform: rotate(10deg); }
+    .ritual-status {
+      position: absolute;
+      z-index: 6;
+      top: 36px;
+      left: 50%;
+      width: calc(100% - 48px);
+      margin: 0;
+      color: rgba(216, 199, 167, .42);
+      font-size: 10px;
+      letter-spacing: .2em;
+      text-align: center;
+      transform: translateX(-50%);
+    }
+
+    .paper-offering {
+      position: relative;
+      z-index: 3;
+      width: 155px;
+      height: 210px;
+      padding: 20px 16px;
+      overflow: hidden;
+      color: rgba(67, 44, 24, .72);
+      background:
+        linear-gradient(90deg, transparent 49.5%, rgba(112, 75, 35, .13) 50%, transparent 50.5%),
+        linear-gradient(#c9b079, #b99757);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, .3), inset 0 0 30px rgba(81, 42, 11, .15);
+      transform: rotate(-2deg);
+      transition: transform 600ms cubic-bezier(.2,.8,.2,1), opacity 500ms ease, filter 500ms ease;
+    }
+    .paper-offering::before {
+      content: "";
+      position: absolute;
+      inset: 9px;
+      border: 1px solid rgba(94, 53, 19, .38);
+      box-shadow: inset 0 0 0 3px rgba(184, 136, 54, .22);
+    }
+    .paper-offering::after {
+      content: "云寄";
+      position: absolute;
+      right: 15px;
+      bottom: 17px;
+      width: 25px;
+      height: 30px;
+      border: 1px solid rgba(141, 48, 30, .65);
+      color: rgba(141, 48, 30, .72);
+      font-family: var(--brush);
+      font-size: 11px;
+      line-height: 14px;
+      text-align: center;
+    }
+    .paper-inner { position: relative; z-index: 1; text-align: center; }
+    .paper-symbol { display: block; margin-top: 28px; font-family: var(--brush); font-size: 42px; line-height: 1; }
+    .paper-for { display: block; margin-top: 18px; font-size: 11px; letter-spacing: .14em; }
+    .paper-name { display: block; max-width: 112px; margin-top: 5px; overflow: hidden; font-family: var(--brush); font-size: 23px; text-overflow: ellipsis; white-space: nowrap; }
+
+    .flame-wrap {
+      position: relative;
+      z-index: 5;
+      width: 210px;
+      height: 135px;
+      margin-top: -44px;
+      filter: drop-shadow(0 0 24px rgba(219, 82, 22, .24));
+    }
+    .flame {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      width: 58px;
+      height: 90px;
+      border-radius: 78% 22% 68% 32% / 70% 30% 70% 30%;
+      opacity: .72;
+      background: linear-gradient(145deg, #ffdf81 8%, #de6c26 58%, rgba(128, 26, 9, .3));
+      transform: translateX(-50%) rotate(8deg) scale(.68);
+      transform-origin: 50% 100%;
+      animation: flame 1.15s ease-in-out infinite alternate;
+    }
+    .flame::after {
+      content: "";
+      position: absolute;
+      right: 27px;
+      bottom: -1px;
+      width: 28px;
+      height: 55px;
+      border-radius: 70% 30% 60% 40%;
+      background: rgba(255, 225, 137, .9);
+      filter: blur(1px);
+    }
+    .flame-b { left: 36%; height: 62px; animation-delay: -.65s; transform: translateX(-50%) rotate(-12deg) scale(.5); }
+    .flame-c { left: 65%; height: 68px; animation-delay: -.25s; transform: translateX(-50%) rotate(18deg) scale(.48); }
+    .brazier {
+      position: absolute;
+      right: 16px;
+      bottom: 0;
+      left: 16px;
+      height: 45px;
+      border-radius: 5px 5px 54% 54%;
+      background: linear-gradient(180deg, #5b4532, #1e1813 72%);
+      box-shadow: inset 0 5px 10px rgba(0,0,0,.5), 0 12px 20px rgba(0,0,0,.35);
+    }
+    .brazier::before {
+      content: "";
+      position: absolute;
+      top: -5px;
+      right: -4px;
+      left: -4px;
+      height: 11px;
+      border: 2px solid #725638;
+      border-radius: 50%;
+      background: #24180f;
+    }
+    .brazier::after {
+      content: "";
+      position: absolute;
+      right: 30px;
+      bottom: -14px;
+      left: 30px;
+      height: 16px;
+      border-right: 8px solid transparent;
+      border-left: 8px solid transparent;
+      background: linear-gradient(90deg, #33271d 0 18%, transparent 18% 82%, #33271d 82%);
+    }
+    .send-button {
+      position: relative;
+      z-index: 7;
+      display: inline-flex;
+      min-width: 190px;
+      min-height: 54px;
+      margin-top: 37px;
+      padding: 0 28px;
+      border: 1px solid rgba(216, 166, 77, .52);
+      border-radius: 0;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: #2a1a0b;
+      background: var(--gold);
+      box-shadow: 0 14px 50px rgba(210, 116, 37, .12);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      transition: background 180ms ease, transform 160ms ease, box-shadow 180ms ease;
+    }
+    .send-button::after { content: "火"; font-family: var(--brush); font-size: 19px; font-weight: 400; }
+    .send-button:hover { background: var(--gold-bright); box-shadow: 0 16px 60px rgba(210, 116, 37, .24); transform: translateY(-2px); }
+    .send-button:active { transform: scale(.98); }
+    .send-button:disabled { opacity: .55; cursor: wait; }
+    .local-count { margin: 18px 0 0; color: rgba(216, 199, 167, .28); font-size: 10px; letter-spacing: .1em; }
+    .local-count strong { color: rgba(216, 166, 77, .7); font-weight: 500; }
+
+    .completion {
+      position: absolute;
+      z-index: 10;
+      inset: 0;
+      display: grid;
+      padding: 40px;
+      place-items: center;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      background: radial-gradient(circle, rgba(30, 19, 10, .84), rgba(11, 9, 7, .96) 70%);
+      transition: opacity 800ms ease, visibility 0s linear 800ms;
+    }
+    .completion-card { max-width: 340px; text-align: center; transform: translateY(18px); transition: transform 800ms cubic-bezier(.2,.8,.2,1); }
+    .completion-mark { color: var(--gold); font-family: var(--brush); font-size: 74px; line-height: 1; }
+    .completion h3 { margin: 18px 0 11px; color: #e6d5b6; font-family: var(--brush); font-size: 38px; font-weight: 400; }
+    .completion p { margin: 0; color: rgba(216, 199, 167, .54); font-size: 13px; line-height: 2; }
+    .again {
+      margin-top: 28px;
+      padding: 10px 18px;
+      border: 1px solid rgba(216, 166, 77, .36);
+      color: rgba(216, 199, 167, .72);
+      background: transparent;
+      cursor: pointer;
+      pointer-events: auto;
+      font-size: 11px;
+      letter-spacing: .14em;
+    }
+    .again:hover { color: var(--gold-bright); border-color: var(--gold); }
+    .fire-panel.is-complete .completion { pointer-events: auto; visibility: visible; opacity: 1; transition-delay: 0s; }
+    .fire-panel.is-complete .completion-card { transform: none; }
+    .fire-panel.is-burning .paper-offering { opacity: 0; filter: brightness(1.8) sepia(1); transform: translateY(125px) rotate(6deg) scale(.45); }
+    .fire-panel.is-burning .flame { opacity: 1; animation-duration: .38s; transform: translateX(-50%) rotate(4deg) scale(1.45); }
+
+    .closing {
+      display: grid;
+      min-height: 310px;
+      padding: 74px 24px 95px;
+      place-items: center;
+      text-align: center;
+    }
+    .closing-verse { margin: 0; color: rgba(216, 199, 167, .48); font-family: var(--brush); font-size: clamp(22px, 4vw, 36px); line-height: 1.8; letter-spacing: .12em; }
+    .closing-verse span { display: block; color: rgba(216, 166, 77, .36); font-family: var(--serif); font-size: 9px; letter-spacing: .35em; }
+
+    .toast {
+      position: fixed;
+      z-index: 50;
+      bottom: max(24px, env(safe-area-inset-bottom));
+      left: 50%;
+      padding: 11px 16px;
+      border: 1px solid rgba(216, 166, 77, .3);
+      color: var(--paper);
+      background: rgba(18, 14, 10, .92);
+      box-shadow: 0 12px 38px rgba(0,0,0,.35);
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 12px);
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    :focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 4px; }
+    @keyframes rise-in { from { opacity: 0; transform: translateY(22px); } }
+    @keyframes breathe { to { opacity: .8; box-shadow: 0 0 8px #e9d2a5; } }
+    @keyframes cue { 0%, 100% { opacity: .3; transform: scaleY(.55); } 50% { opacity: 1; transform: scaleY(1); } }
+    @keyframes smoke { 0% { opacity: 0; transform: translateX(-5px) scaleX(.7); } 30% { opacity: .7; } 100% { opacity: 0; transform: translate(24px, -70px) scaleX(2.2); } }
+    @keyframes flame { from { border-radius: 74% 26% 65% 35%; transform: translateX(-50%) rotate(-7deg) scale(.65,.76); } to { border-radius: 45% 55% 71% 29%; transform: translateX(-50%) rotate(9deg) scale(.76,1.02); } }
+
+    @media (max-width: 820px) {
+      .ritual-grid { grid-template-columns: 1fr; }
+      .letter-panel { border-right: 0; border-bottom: 1px solid var(--line); }
+      .fire-panel { min-height: 620px; }
+    }
+    @media (max-width: 520px) {
+      .topbar { width: calc(100% - 28px); }
+      .date-mark { letter-spacing: .12em; }
+      .hero { min-height: 66vh; padding-right: 18px; padding-left: 18px; }
+      h1 { font-size: clamp(68px, 25vw, 105px); }
+      .hero-copy { max-width: 320px; font-size: 13px; }
+      .ritual-shell { width: calc(100% - 20px); padding-bottom: 60px; }
+      .letter-panel { padding: 28px 22px 34px; }
+      .offerings { gap: 6px; }
+      .offering { min-height: 86px; padding-inline: 4px; }
+      .fire-panel { min-height: 590px; }
+      .completion { padding: 26px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      .fire-panel.is-burning .paper-offering { transform: none; }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      .ritual-grid { background: #14110e; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#ritual">直接开始</a>
+  <div class="night-sky" aria-hidden="true">
+    <div class="moon"></div>
+    <div class="stars"><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i><i class="star"></i></div>
+    <div class="mountains"></div>
+  </div>
+
+  <header class="topbar">
+    <a class="back" href="../../personal/">返回个人空间</a>
+    <span class="date-mark">七月十五 · 中元</span>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="pageTitle">
+      <div class="hero-inner">
+        <span class="seal" aria-hidden="true">中元</span>
+        <p class="festival">THE GHOST FESTIVAL</p>
+        <h1 id="pageTitle">云寄</h1>
+        <p class="hero-copy">有些话隔着岁月，仍想说给一个人听。<br>今夜写下思念，借一簇火光，送它去远方。</p>
+        <a class="scroll-cue" href="#ritual">落笔寄情</a>
+      </div>
+    </section>
+
+    <section class="ritual-shell" id="ritual" aria-labelledby="ritualTitle">
+      <div class="ritual-grid">
+        <form class="letter-panel" id="letterForm" novalidate>
+          <span class="section-no">壹 · 写一封信</span>
+          <h2 id="ritualTitle">纸短，情长</h2>
+          <p class="section-note">称呼和寄语都只留在你的浏览器里，不会上传到服务器。</p>
+
+          <label class="field" for="recipient">
+            <span class="field-label">寄给谁 <small class="optional">可不署名</small></span>
+            <input id="recipient" name="recipient" maxlength="20" placeholder="一位想念的人" autocomplete="off">
+          </label>
+
+          <label class="field" for="message">
+            <span class="field-label">想说的话 <small class="optional">最多 120 字</small></span>
+            <textarea id="message" name="message" maxlength="120" placeholder="愿你在远方，平安自在……" required></textarea>
+            <span class="counter" id="counter">0 / 120</span>
+          </label>
+
+          <h3 class="offer-title" id="offerTitle">添一份纸礼</h3>
+          <div class="offerings" role="group" aria-labelledby="offerTitle">
+            <button class="offering" type="button" data-offer="金箔纸" data-symbol="金" aria-pressed="true"><span class="offering-mark">金</span><span class="offering-name">金箔纸</span></button>
+            <button class="offering" type="button" data-offer="往生莲" data-symbol="莲" aria-pressed="false"><span class="offering-mark">莲</span><span class="offering-name">往生莲</span></button>
+            <button class="offering" type="button" data-offer="平安灯" data-symbol="安" aria-pressed="false"><span class="offering-mark">安</span><span class="offering-name">平安灯</span></button>
+          </div>
+
+          <p class="privacy-note">这是一场无消费、无账户的数字纪念仪式；寄语不会离开此设备。</p>
+        </form>
+
+        <div class="fire-panel" id="firePanel">
+          <canvas id="embers" aria-hidden="true"></canvas>
+          <div class="incense-smoke" aria-hidden="true"><i class="smoke-line"></i><i class="smoke-line"></i></div>
+          <p class="ritual-status" id="ritualStatus" aria-live="polite">静候一封家书</p>
+
+          <div class="paper-offering" id="paperOffering" aria-hidden="true">
+            <div class="paper-inner">
+              <span class="paper-symbol" id="paperSymbol">金</span>
+              <span class="paper-for">敬寄</span>
+              <span class="paper-name" id="paperName">故人</span>
+            </div>
+          </div>
+
+          <div class="flame-wrap" aria-hidden="true">
+            <i class="flame flame-a"></i><i class="flame flame-b"></i><i class="flame flame-c"></i>
+            <div class="brazier"></div>
+          </div>
+
+          <button class="send-button" id="sendButton" type="submit" form="letterForm">焚寄心意</button>
+          <p class="local-count">此设备已寄出 <strong id="localCount">0</strong> 份思念</p>
+
+          <div class="completion" aria-hidden="true" id="completion" inert>
+            <div class="completion-card">
+              <div class="completion-mark" aria-hidden="true">念</div>
+              <h3>心意已寄出</h3>
+              <p id="completionCopy">烟火会散，思念有归处。<br>愿远方的人，清净安宁。</p>
+              <button class="again" id="againButton" type="button">再寄一封</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="closing">
+      <p class="closing-verse">不忘来路，不负思念<span>REMEMBER · HONOR · LET GO</span></p>
+    </footer>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const form = document.getElementById("letterForm");
+      const message = document.getElementById("message");
+      const recipient = document.getElementById("recipient");
+      const counter = document.getElementById("counter");
+      const paperName = document.getElementById("paperName");
+      const paperSymbol = document.getElementById("paperSymbol");
+      const firePanel = document.getElementById("firePanel");
+      const sendButton = document.getElementById("sendButton");
+      const againButton = document.getElementById("againButton");
+      const completion = document.getElementById("completion");
+      const completionCopy = document.getElementById("completionCopy");
+      const ritualStatus = document.getElementById("ritualStatus");
+      const countEl = document.getElementById("localCount");
+      const toast = document.getElementById("toast");
+      const offerButtons = [...document.querySelectorAll(".offering")];
+      const canvas = document.getElementById("embers");
+      const context = canvas.getContext("2d");
+      const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+      const countKey = "cloud-memorial-sent-count-v1";
+      let particles = [];
+      let selectedOffer = "金箔纸";
+      let burning = false;
+      let animationFrame = 0;
+
+      const readCount = () => {
+        try { return Math.max(0, Number.parseInt(localStorage.getItem(countKey) || "0", 10) || 0); }
+        catch { return 0; }
+      };
+      const writeCount = (value) => {
+        try { localStorage.setItem(countKey, String(value)); } catch {}
+      };
+      countEl.textContent = readCount().toLocaleString("zh-CN");
+
+      const updateCounter = () => { counter.textContent = `${message.value.length} / 120`; };
+      const updateName = () => { paperName.textContent = recipient.value.trim() || "故人"; };
+      message.addEventListener("input", updateCounter);
+      recipient.addEventListener("input", updateName);
+
+      offerButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          offerButtons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+          selectedOffer = button.dataset.offer;
+          paperSymbol.textContent = button.dataset.symbol;
+        });
+      });
+
+      const showToast = (text) => {
+        toast.textContent = text;
+        toast.classList.add("show");
+        window.setTimeout(() => toast.classList.remove("show"), 2200);
+      };
+
+      const resizeCanvas = () => {
+        const rect = canvas.getBoundingClientRect();
+        const scale = Math.min(devicePixelRatio || 1, 2);
+        canvas.width = Math.round(rect.width * scale);
+        canvas.height = Math.round(rect.height * scale);
+        context.setTransform(scale, 0, 0, scale, 0, 0);
+      };
+
+      const makeEmbers = () => {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        const amount = reduceMotion.matches ? 18 : 72;
+        particles = Array.from({ length: amount }, () => ({
+          x: width * (.5 + (Math.random() - .5) * .18),
+          y: height * .62 + Math.random() * 45,
+          vx: (Math.random() - .5) * 1.4,
+          vy: -(1.1 + Math.random() * 3.2),
+          size: .7 + Math.random() * 2.6,
+          life: .45 + Math.random() * .55,
+          decay: .006 + Math.random() * .018,
+          hue: 24 + Math.random() * 25
+        }));
+      };
+
+      const renderEmbers = () => {
+        context.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+        particles.forEach((particle) => {
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+          particle.vx += (Math.random() - .5) * .035;
+          particle.life -= particle.decay;
+          context.beginPath();
+          context.fillStyle = `hsla(${particle.hue}, 95%, 66%, ${Math.max(0, particle.life)})`;
+          context.shadowColor = "rgba(255, 117, 33, .75)";
+          context.shadowBlur = 7;
+          context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+          context.fill();
+        });
+        particles = particles.filter((particle) => particle.life > 0);
+        if (particles.length) animationFrame = requestAnimationFrame(renderEmbers);
+      };
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (burning) return;
+        if (!message.value.trim()) {
+          message.focus();
+          showToast("先写下一句想说的话");
+          return;
+        }
+        burning = true;
+        sendButton.disabled = true;
+        firePanel.classList.add("is-burning");
+        ritualStatus.textContent = `正将${selectedOffer}与心意送往远方`;
+        resizeCanvas();
+        makeEmbers();
+        cancelAnimationFrame(animationFrame);
+        renderEmbers();
+
+        const name = recipient.value.trim();
+        const nextCount = readCount() + 1;
+        writeCount(nextCount);
+        countEl.textContent = nextCount.toLocaleString("zh-CN");
+        completionCopy.innerHTML = name
+          ? `寄给${escapeText(name)}的心意，已随火光启程。<br>愿念有所归，愿你今夜安宁。`
+          : "烟火会散，思念有归处。<br>愿远方的人，清净安宁。";
+
+        window.setTimeout(() => {
+          firePanel.classList.add("is-complete");
+          completion.setAttribute("aria-hidden", "false");
+          completion.removeAttribute("inert");
+          ritualStatus.textContent = "心意已寄出";
+          againButton.focus();
+        }, reduceMotion.matches ? 80 : 2100);
+      });
+
+      againButton.addEventListener("click", () => {
+        firePanel.classList.remove("is-burning", "is-complete");
+        completion.setAttribute("aria-hidden", "true");
+        completion.setAttribute("inert", "");
+        form.reset();
+        offerButtons.forEach((button, index) => button.setAttribute("aria-pressed", String(index === 0)));
+        selectedOffer = "金箔纸";
+        paperSymbol.textContent = "金";
+        paperName.textContent = "故人";
+        updateCounter();
+        burning = false;
+        sendButton.disabled = false;
+        ritualStatus.textContent = "静候一封家书";
+        message.focus();
+      });
+
+      const escapeText = (value) => value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" })[character]);
+      window.addEventListener("resize", resizeCanvas, { passive: true });
+      resizeCanvas();
+    })();
+  </script>
+</body>
+</html>
