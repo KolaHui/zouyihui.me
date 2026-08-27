@@ -1,0 +1,12 @@
+Real flame footage
+==================
+
+Source: Kaminfeuer.webm
+Creator: Larvis
+Source page: https://commons.wikimedia.org/wiki/File:Kaminfeuer.webm
+License: Creative Commons Attribution-ShareAlike 4.0 International
+License URL: https://creativecommons.org/licenses/by-sa/4.0/
+
+The local fire-loop.webm and fire-loop.mp4 files are cropped, color-graded,
+muted, resized, and cross-faded derivatives prepared for this site. These
+derivative media files are distributed under CC BY-SA 4.0.
