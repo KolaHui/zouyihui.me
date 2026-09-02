@@ -7,7 +7,8 @@
   <meta name="color-scheme" content="light">
   <meta name="description" content="Zou Yihui 的个人主页">
   <title>ZOUYIHUI.ME</title>
-  <link rel="icon" href="./assets/mark.svg" type="image/svg+xml">
+  <link rel="icon" href="./assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="./assets/mark-180.png">
   <style>
     :root {
       color-scheme: light;
@@ -17,6 +18,14 @@
       --edge: clamp(18px, 3vw, 34px);
       --mark-box: 74px;
       --mark-half: 37px;
+      /* 标志画布比标志本身大一圈：定版构图里结的外接框只占画面 48%
+         （4096 母版中 1971px 宽），所以画布要按 视觉尺寸 ÷ .48 放，
+         多出来的部分是透明留白，不影响布局 */
+      --mark-canvas: 133px;
+      --mark-intro: 3.8;
+      /* 成形时标志停在屏幕正中，这两个值是中心相对左上角停靠位的位移 */
+      --cx: calc(50vw - var(--edge) - var(--mark-half));
+      --cy: calc(50svh - var(--edge) - var(--mark-half));
       --tilt-x: 0deg;
       --tilt-y: 0deg;
     }
@@ -83,7 +92,8 @@
       width: var(--mark-box);
       height: var(--mark-box);
       transform-origin: center;
-      animation: dock-logo 2.8s cubic-bezier(.2,.83,.24,1) both;
+      /* 缓动已经编码在下面的采样点里了，这里必须 linear，再叠一层会二次减速 */
+      animation: dock-logo 3.98s linear both;
       will-change: transform;
     }
     html[data-docked="true"] .brand-stage { will-change: auto; }
@@ -121,19 +131,28 @@
     .mark-tilt {
       position: relative;
       z-index: 1;
-      width: 64px;
-      height: 64px;
+      width: var(--mark-box);
+      height: var(--mark-box);
       transform: perspective(600px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
       transform-style: preserve-3d;
       transition: transform 120ms linear;
       will-change: auto;
     }
     html[data-rendering="true"] .mark-tilt { will-change: transform; }
-    .mark-canvas {
+    /* 画布比按钮大，居中溢出 —— 溢出的部分全是透明的 */
+    .mark-canvas, .mark-still {
+      position: absolute;
+      top: 50%;
+      left: 50%;
       display: block;
-      width: 100%;
-      height: 100%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
     }
+    .mark-canvas { width: var(--mark-canvas); height: var(--mark-canvas); }
+    /* 退路用的是紧凑裁切的图标（结占 86%），所以框比画布小得多 */
+    .mark-still { width: var(--mark-box); height: var(--mark-box); }
+    html:not([data-mark-fallback="true"]) .mark-still { display: none; }
+    html[data-mark-fallback="true"] .mark-canvas { display: none; }
     .entry-nav {
       position: fixed;
       z-index: 20;
@@ -144,7 +163,8 @@
       align-items: center;
       opacity: 0;
       transform: translate3d(0,12px,0);
-      animation: reveal-nav 700ms cubic-bezier(.2,.9,.2,1) 2.42s forwards;
+      /* 形在 2.45 收紧完成，入口就跟着浮上来 —— 不必等标志归位 */
+      animation: reveal-nav 700ms cubic-bezier(.2,.9,.2,1) 2.55s forwards;
     }
     .entry {
       position: relative;
@@ -199,7 +219,7 @@
       opacity: 0;
       background: rgba(24,149,207,.55);
       box-shadow: 10px 0 0 rgba(79,210,218,.32), 20px 0 0 rgba(255,205,217,.25);
-      animation: reveal-dot 500ms ease 2.8s forwards;
+      animation: reveal-dot 500ms ease 3.6s forwards;
     }
     .ripple {
       position: fixed;
@@ -214,19 +234,34 @@
     }
     html[data-replay="true"] .brand-stage, html[data-replay="true"] .entry-nav, html[data-replay="true"] .whisper { animation: none; }
     html[data-replay="true"] .entry-nav, html[data-replay="true"] .whisper { opacity: 0; }
+    /* 归位：2.90s 成形完，再用 1.08s 沿一条向上鼓的弧线缩到左上角。
+       x 走得比 y 慢（进度 e^1.4 对 e^0.7），轨迹就在中心与停靠位之间
+       向上凸出约 8% 对角长 —— 是「飘」过去的，不是直线滑过去。
+       起点 2.90/3.98 = 72.90%，之后每 3.39% 一个采样点。 */
     @keyframes dock-logo {
-      0%, 71% { transform: translate3d(calc(50vw - var(--edge) - var(--mark-half)), calc(50svh - var(--edge) - var(--mark-half)), 0) scale(3.38); }
-      81% { transform: translate3d(calc(50vw - var(--edge) - var(--mark-half)), calc(50svh - var(--edge) - var(--mark-half)), 0) scale(3.38); }
+      0%, 72.90% { transform: translate3d(var(--cx), var(--cy), 0) scale(var(--mark-intro)); }
+      76.29% { transform: translate3d(calc(var(--cx) * .868), calc(var(--cy) * .632), 0) scale(calc(1 + (var(--mark-intro) - 1) * .766)); }
+      79.68% { transform: translate3d(calc(var(--cx) * .683), calc(var(--cy) * .436), 0) scale(calc(1 + (var(--mark-intro) - 1) * .562)); }
+      83.06% { transform: translate3d(calc(var(--cx) * .511), calc(var(--cy) * .292), 0) scale(calc(1 + (var(--mark-intro) - 1) * .391)); }
+      86.45% { transform: translate3d(calc(var(--cx) * .340), calc(var(--cy) * .181), 0) scale(calc(1 + (var(--mark-intro) - 1) * .250)); }
+      89.84% { transform: translate3d(calc(var(--cx) * .191), calc(var(--cy) * .101), 0) scale(calc(1 + (var(--mark-intro) - 1) * .141)); }
+      93.23% { transform: translate3d(calc(var(--cx) * .086), calc(var(--cy) * .044), 0) scale(calc(1 + (var(--mark-intro) - 1) * .062)); }
+      96.61% { transform: translate3d(calc(var(--cx) * .022), calc(var(--cy) * .011), 0) scale(calc(1 + (var(--mark-intro) - 1) * .016)); }
       100% { transform: translate3d(0,0,0) scale(1); }
     }
     @keyframes reveal-nav { to { opacity: 1; transform: none; } }
     @keyframes reveal-dot { to { opacity: 1; } }
     @keyframes ripple { to { opacity: 0; transform: scale(14); } }
     @media (max-width: 620px) {
-      :root { --edge: max(16px, env(safe-area-inset-left)); --mark-box: 64px; --mark-half: 32px; }
+      :root {
+        --edge: max(16px, env(safe-area-inset-left));
+        --mark-box: 64px;
+        --mark-half: 32px;
+        --mark-canvas: 114px;
+        --mark-intro: 3.2;
+      }
       .brand-button { border-radius: 19px; }
       .brand-button::before { border-radius: 18px; }
-      .mark-tilt { width: 55px; height: 55px; }
       .entry-nav { left: max(16px, env(safe-area-inset-left)); right: max(16px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1fr 1fr; }
       .entry { min-width: 0; padding: 0 13px; font-size: 13px; }
       .whisper { display: none; }
@@ -241,9 +276,6 @@
     @media (prefers-reduced-transparency: reduce) {
       .entry, .brand-button::before { background: #f5fbfe; backdrop-filter: none; -webkit-backdrop-filter: none; }
     }
-    @media (prefers-contrast: more) {
-      .entry { color: #063c58; border-color: rgba(6,60,88,.38); background: rgba(255,255,255,.96); }
-    }
   </style>
 </head>
 <body>
@@ -253,7 +285,10 @@
     <canvas class="ambient-canvas" id="ambientCanvas" aria-hidden="true"></canvas>
     <div class="brand-stage">
       <button class="brand-button" id="brandButton" type="button" aria-label="重新播放标志动画">
-        <span class="mark-tilt"><canvas class="mark-canvas" id="markCanvas" width="192" height="192" aria-hidden="true"></canvas></span>
+        <span class="mark-tilt">
+          <canvas class="mark-canvas" id="markCanvas" aria-hidden="true"></canvas>
+          <img class="mark-still" src="./assets/mark-still.png" alt="" aria-hidden="true" width="74" height="74">
+        </span>
       </button>
     </div>
     <nav class="entry-nav" id="entryNav" aria-label="主页入口">
@@ -262,7 +297,9 @@
     </nav>
     <span class="whisper" aria-hidden="true"></span>
   </main>
-  <script>
+  <script type="module">
+    import { createMark, TIMELINE } from "./assets/mark-metal.js";
+
     (() => {
       const root = document.documentElement;
       const world = document.querySelector(".world");
@@ -270,9 +307,9 @@
       const markTilt = document.querySelector(".mark-tilt");
       const markCanvas = document.getElementById("markCanvas");
       const ambientCanvas = document.getElementById("ambientCanvas");
-      const markContext = markCanvas.getContext("2d", { alpha: true });
       const ambientContext = ambientCanvas.getContext("2d", { alpha: true });
       const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+      const DOCK_END = 3.98;                 // 和 CSS 里 dock-logo 的时长保持一致
       let introStarted = performance.now();
       let width = 0, height = 0, ratio = 1;
       let pointerTargetX = 0, pointerTargetY = 0, pointerX = 0, pointerY = 0;
@@ -280,8 +317,21 @@
       const diagnostics = new URLSearchParams(location.search).has("perf");
       const stats = { callbacks: 0, frames: 0, skippedCallbacks: 0, markDraws: 0, ambientDraws: 0 };
       const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
-      const smoothstep = (edge0, edge1, value) => { const x = clamp((value - edge0) / (edge1 - edge0), 0, 1); return x * x * (3 - 2 * x); };
-      markContext.setTransform(.4, 0, 0, .4, 0, 0);
+      /* 成形途中的站数。落定帧不受影响 —— 引擎在冻结点会强制换回完整的 170 站，
+         所以最终那个标志和定版逐像素相同（实测差 0）。
+         降的只是「正在长出来」的那 2.7 秒：170 站要 54ms/帧，跑不满 30fps；
+         96 站是 26ms，而画面平均差 0.213/255 —— 比定版动画相邻两帧之间的
+         0.415 还小一半，看不出来。手机屏更小、GPU 更弱，再低一档。 */
+      const FORMING_N = innerWidth <= 620 ? 80 : 96;
+
+      /* 标志本体：三叶结 · 液态金属。没有 WebGL2 就退回定版静帧 */
+      let mark = null;
+      try {
+        mark = createMark(markCanvas);
+      } catch (error) {
+        root.dataset.markFallback = "true";
+        if (diagnostics) console.warn("标志退回静帧：", error.message);
+      }
 
       function scheduleRender() {
         if (animationFrame || document.hidden || reduceMotion.matches) return;
@@ -340,50 +390,6 @@
         context.restore();
       }
 
-      function logoPoints(seconds) {
-        const drift = Math.sin(seconds * .74), breath = Math.sin(seconds * .47 + 1.1), curl = Math.sin(seconds * .61 + 2.2);
-        const main = [
-          {x:58,y:138+drift*3},{x:116+breath*3,y:92-curl*2},{x:228+drift*4,y:99+breath*3},{x:353-breath*4,y:133+curl*2},
-          {x:320+drift*3,y:185-breath*3},{x:235-curl*4,y:220+drift*2},{x:169+breath*3,y:271+curl*3},{x:109-drift*3,y:329-breath*2},
-          {x:180+curl*3,y:359+drift*3},{x:286+breath*4,y:350-curl*3},{x:371-drift*3,y:307+breath*2}
-        ];
-        const branch = [{x:111-curl*2,y:135+breath*2},{x:164+drift*3,y:167-breath*2},{x:218-breath*2,y:219+curl*2},{x:258+curl*3,y:278+drift*2},{x:247-drift*2,y:356-breath*3}];
-        const tributary = [{x:344+breath*2,y:132-drift*2},{x:305-curl*3,y:157+breath*2},{x:264+drift*2,y:186-curl*2},{x:218-breath*2,y:219+curl*2}];
-        return { main: catmullRom(main, 16), branch: catmullRom(branch, 16), tributary: catmullRom(tributary, 16) };
-      }
-
-      function drawMark(seconds, intro) {
-        const context = markContext, paths = logoPoints(seconds);
-        context.clearRect(0, 0, 480, 480);
-        const gradient = context.createLinearGradient(70, 85, 370, 365);
-        gradient.addColorStop(0, "rgba(182,248,249,.98)");
-        gradient.addColorStop(.22, "rgba(66,207,222,.98)");
-        gradient.addColorStop(.52, "rgba(20,143,208,.99)");
-        gradient.addColorStop(.73, "rgba(83,213,222,.97)");
-        gradient.addColorStop(1, "rgba(42,119,190,.98)");
-        [
-          [paths.branch, smoothstep(.22,.82,intro), 7.4],
-          [paths.tributary, smoothstep(.36,.9,intro), 5.6],
-          [paths.main, smoothstep(.02,.67,intro), 10.8]
-        ].forEach(([path, reveal, size]) => {
-          strokeCurve(context, path.map(point => ({x:point.x+2.4,y:point.y+4.3})), reveal, "rgba(11,84,143,.16)", size+3.8, 4);
-          strokeCurve(context, path, reveal, "rgba(139,235,241,.2)", size+5.4, 5);
-          strokeCurve(context, path, reveal, gradient, size, 1.4);
-          context.save();
-          context.setLineDash([52,164]);
-          context.lineDashOffset = -seconds * 22;
-          strokeCurve(context, path.map((point,index) => ({x:point.x-1.1+Math.sin(index*.16+seconds*1.15)*.45,y:point.y-1.7})), reveal, "rgba(248,255,255,.72)", Math.max(1.25,size*.14));
-          context.restore();
-        });
-        const glow = context.createRadialGradient(218,219,0,218,219,28);
-        glow.addColorStop(0, `rgba(255,211,224,${.21 * smoothstep(.22,.82,intro)})`);
-        glow.addColorStop(1, "rgba(255,211,224,0)");
-        context.fillStyle = glow;
-        context.beginPath();
-        context.arc(218,219,28,0,Math.PI*2);
-        context.fill();
-      }
-
       function ambientPath(baseY, amplitude, phase, seconds, reverse = false) {
         const points = [], direction = reverse ? -1 : 1;
         for (let index = -1; index <= 7; index += 1) {
@@ -413,7 +419,11 @@
       function render(now) {
         animationFrame = 0;
         stats.callbacks += 1;
-        if (lastRender && now - lastRender < 30) {
+        const elapsed = (now - introStarted) / 1000;
+        /* 成形段按导出动画的 30 fps 走；落定之后只剩金属在流，降到 20 fps ——
+           条纹一轮 3.7 秒，看不出差别，却省掉三分之一的帧 */
+        const minInterval = elapsed < DOCK_END ? 30 : 50;
+        if (lastRender && now - lastRender < minInterval) {
           stats.skippedCallbacks += 1;
           scheduleRender();
           return;
@@ -426,31 +436,30 @@
         pointerX += (pointerTargetX-pointerX) * response;
         pointerY += (pointerTargetY-pointerY) * response;
         markTilt.style.transform = `perspective(600px) rotateX(${(-pointerY*.16).toFixed(2)}deg) rotateY(${(pointerX*.19).toFixed(2)}deg)`;
-        const intro = reduceMotion.matches ? 1 : clamp((now-introStarted)/2050,0,1);
         const pointerMoving = Math.abs(pointerTargetX-pointerX) > .015 || Math.abs(pointerTargetY-pointerY) > .015;
         if (ambientDirty || pointerMoving) {
           drawAmbient(now/1000);
           ambientDirty = false;
         }
-        drawMark(now/1000,intro);
-        stats.markDraws += 1;
-        if (intro < 1 || pointerMoving) {
-          scheduleRender();
-        } else {
-          lastRender = 0;
-          delete root.dataset.rendering;
+        if (mark) {
+          mark.draw(elapsed, FORMING_N);
+          stats.markDraws += 1;
         }
+        /* 金属一直在流，所以落定之后也要接着排帧 ——
+           标签页藏起来时由 visibilitychange 掐掉 */
+        scheduleRender();
       }
 
       function replayIntro() {
         if (reduceMotion.matches) return;
         introStarted = performance.now();
+        mark?.reset();
         delete root.dataset.docked;
         clearTimeout(dockTimer);
         root.dataset.replay = "true";
         void document.body.offsetWidth;
         delete root.dataset.replay;
-        dockTimer = setTimeout(() => { root.dataset.docked = "true"; }, 2800);
+        dockTimer = setTimeout(() => { root.dataset.docked = "true"; }, DOCK_END * 1000);
         ambientDirty = true;
         scheduleRender();
       }
@@ -460,9 +469,12 @@
         lastRender = 0;
         ambientDirty = true;
         if (reduceMotion.matches) {
-          render(performance.now());
+          drawAmbient(performance.now()/1000);
+          mark?.draw(TIMELINE.HOLD);
           delete root.dataset.rendering;
         } else {
+          introStarted = performance.now();
+          mark?.reset();
           scheduleRender();
         }
       }
@@ -490,7 +502,7 @@
       }, {passive:true});
       resizeAmbient();
       if (reduceMotion.matches) root.dataset.docked = "true";
-      else dockTimer = setTimeout(() => { root.dataset.docked = "true"; }, 2800);
+      else dockTimer = setTimeout(() => { root.dataset.docked = "true"; }, DOCK_END * 1000);
       addEventListener("resize", () => { resizeAmbient(); scheduleRender(); }, {passive:true});
       document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
@@ -508,7 +520,13 @@
       if (diagnostics) {
         window.__homeMotionDiagnostics = () => ({ ...stats, rafRunning: Boolean(animationFrame), rendering: root.dataset.rendering === "true" });
       }
-      if (reduceMotion.matches) render(performance.now()); else scheduleRender();
+      if (reduceMotion.matches) {
+        /* 不播成形，直接停在定版那一帧 */
+        drawAmbient(performance.now()/1000);
+        mark?.draw(TIMELINE.HOLD);
+      } else {
+        scheduleRender();
+      }
     })();
   </script>
 </body>

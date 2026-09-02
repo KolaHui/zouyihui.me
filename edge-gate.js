@@ -262,7 +262,13 @@ function safeNext(value) {
 }
 
 function isPublicAssetPath(pathname) {
-  if (pathname === "/" || pathname === "/index.html" || pathname === "/assets/mark.svg") return true;
+  if (pathname === "/" || pathname === "/index.html") return true;
+  // 首页是公开页，它引用到的标志资源必须一起放行 ——
+  // 漏掉任何一个，未登录访客的首页就只剩一个空框。
+  if (pathname === "/assets/mark-metal.js" || pathname === "/assets/mark-still.png") return true;
+  if (pathname === "/assets/favicon.ico" || pathname === "/assets/mark-180.png") return true;
+  // 登录页自己也画标志，所以这两个同样要在未登录时可取
+  if (pathname === "/assets/mark-icon.png" || pathname === "/assets/mark-icon-small.png") return true;
   if (pathname === "/config/portal.config.js") return true;
   if (pathname === "/购票模板.xlsx") return true;
   if (pathname === "/apps/vendor/exceljs.min.js") return true;
@@ -641,7 +647,7 @@ function loginDocument({ error, next, nonce }) {
   <div class="ambient" aria-hidden="true"><div class="orb orb-a"></div><div class="orb orb-b"></div></div>
   <main class="shell">
     <section class="card" aria-labelledby="access-title">
-      <div class="eyebrow"><span class="mark" aria-hidden="true"><img src="/assets/mark.svg" alt=""></span><span>PERSONAL SPACE</span></div>
+      <div class="eyebrow"><span class="mark" aria-hidden="true"><img src="/assets/mark-icon-small.png" srcset="/assets/mark-icon-small.png 1x, /assets/mark-icon.png 2x" alt="" width="30" height="30"></span><span>PERSONAL SPACE</span></div>
       <h1 id="access-title">进入个人空间</h1>
       <p class="subtitle">请输入个人空间密码。验证后，本次浏览器会话可以继续访问你的工作台。</p>
       <form id="access-form" method="post" action="/__access/login" novalidate>

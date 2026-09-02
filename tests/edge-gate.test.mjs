@@ -43,8 +43,24 @@ assert.equal(response.status, 200);
 assert.equal(await response.text(), "asset:/");
 assert.match(response.headers.get("cache-control"), /public, max-age=300/);
 
-response = await worker.fetch(request("/assets/mark.svg"), env);
-assert.equal(response.status, 200);
+// 标志资源：未登录也必须拿得到 —— 公开首页和登录页自己都要画标志
+for (const markAsset of [
+  "/assets/mark-metal.js",
+  "/assets/mark-still.png",
+  "/assets/favicon.ico",
+  "/assets/mark-180.png",
+  "/assets/mark-icon.png",
+  "/assets/mark-icon-small.png",
+]) {
+  response = await worker.fetch(request(markAsset), env);
+  assert.equal(response.status, 200, `${markAsset} 应当公开可取`);
+}
+
+// 放行的是逐个文件，不是整个 assets 目录；被淘汰的旧标志也不再放行
+for (const blocked of ["/assets/whatever-else.png", "/assets/mark.svg"]) {
+  response = await worker.fetch(request(blocked), env);
+  assert.equal(response.status, 303, `${blocked} 不该公开`);
+}
 
 response = await worker.fetch(request("/apps/portal/?invite=one-time"), env);
 assert.equal(response.status, 200);
@@ -74,7 +90,8 @@ assert.equal(response.headers.get("referrer-policy"), "same-origin");
 const accessDocument = await response.text();
 assert.match(accessDocument, /name="next" value="\/"/);
 assert.match(accessDocument, /PERSONAL SPACE/);
-assert.match(accessDocument, /src="\/assets\/mark\.svg"/);
+assert.match(accessDocument, /src="\/assets\/mark-icon-small\.png"/);
+assert.match(accessDocument, /srcset="[^"]*mark-icon\.png 2x"/);
 
 response = await worker.fetch(formRequest("/__access/login", { password: "wrong", next: "/personal/" }), env);
 assert.equal(response.status, 401);

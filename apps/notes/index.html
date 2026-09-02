@@ -6,7 +6,8 @@
   <meta name="theme-color" content="#1f2522">
   <meta name="color-scheme" content="light">
   <title>笔记 · 我的个人空间</title>
-  <link rel="icon" href="../../assets/mark.svg" type="image/svg+xml">
+  <link rel="icon" href="../../assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="../../assets/mark-180.png">
   <style>
     :root {
       color-scheme: light;
@@ -49,7 +50,7 @@
     }
     .vault-head { display: flex; align-items: center; gap: 12px; min-height: 78px; padding: max(14px, env(safe-area-inset-top)) 17px 10px; }
     .home { width: 43px; height: 43px; display: grid; place-items: center; flex: none; border: 1px solid rgba(255,255,255,.11); border-radius: 14px; background: rgba(255,255,255,.055); }
-    .home img { width: 31px; height: 31px; filter: saturate(.7) brightness(1.2); }
+    .home img { width: 31px; height: 31px; }
     .vault-title { min-width: 0; flex: 1; }
     .vault-title strong { display: block; font: 670 14px/1.2 "Songti SC", serif; letter-spacing: .04em; }
     .vault-title span { display: block; margin-top: 4px; color: rgba(255,255,255,.4); font: 600 9px/1 ui-monospace, "SFMono-Regular", Menlo, monospace; letter-spacing: .13em; text-transform: uppercase; }
@@ -173,7 +174,7 @@
 <body>
   <section class="boot" id="bootScreen" aria-live="polite">
     <div class="boot-card">
-      <img class="boot-mark" src="../../assets/mark.svg" alt="">
+      <img class="boot-mark" src="../../assets/mark-icon-small.png" srcset="../../assets/mark-icon-small.png 1x, ../../assets/mark-icon.png 2x" alt="" width="58" height="58">
       <h1 id="bootTitle">正在打开笔记库</h1>
       <p id="bootMessage">正在建立与 Mac 本地数据库的安全连接…</p>
       <a id="bootAction" href="../../personal/" hidden>返回我的个人空间</a>
@@ -183,8 +184,8 @@
   <main class="app" id="noteApp" data-sidebar="closed" hidden>
     <aside class="sidebar" id="vaultSidebar" aria-label="笔记导航">
       <header class="vault-head">
-        <a class="home" href="../../personal/" aria-label="返回我的个人空间"><img src="../../assets/mark.svg" alt=""></a>
-        <div class="vault-title"><strong>邹奕辉的笔记</strong><span>Local knowledge vault</span></div>
+        <a class="home" href="../../personal/" aria-label="返回我的个人空间"><img src="../../assets/mark-icon-small.png" srcset="../../assets/mark-icon-small.png 1x, ../../assets/mark-icon.png 2x" alt="" width="31" height="31"></a>
+        <div class="vault-title"><strong>邹译辉的笔记</strong><span>Local knowledge vault</span></div>
         <button class="icon-btn new-note" id="newNoteBtn" type="button" aria-label="新建笔记">＋</button>
       </header>
       <label class="search-wrap"><span hidden>搜索笔记</span><input class="search" id="searchInput" type="search" placeholder="搜索标题或内容摘要" autocomplete="off"></label>
