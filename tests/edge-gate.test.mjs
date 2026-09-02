@@ -71,6 +71,10 @@ assert.equal(response.status, 200);
 response = await worker.fetch(request("/apps/admin/"), env);
 assert.equal(response.status, 200);
 
+// 导航存的是私人收藏，和个人空间一样必须登录才拿得到
+response = await worker.fetch(request("/apps/nav/"), env);
+assert.equal(response.status, 303, "/apps/nav/ 不该公开");
+
 response = await worker.fetch(request("/personal/"), env);
 assert.equal(response.status, 303);
 assert.equal(new URL(response.headers.get("location")).pathname, "/__access");

@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#f3fbff">
+  <title>导航 · 我的个人空间</title>
+  <link rel="icon" href="../../assets/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="../../assets/mark-180.png">
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+      font-synthesis: none;
+      --ink: #10293c;
+      --muted: #6a7c88;
+      --faint: #93a4ae;
+      --line: rgba(42,112,149,.14);
+      --card: rgba(255,255,255,.68);
+      --accent: #1b8fd4;
+      --focus: rgba(31,157,220,.2);
+      --danger: #d2543f;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      min-height: 100svh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 4%, rgba(193,238,245,.6), transparent 36%),
+        radial-gradient(circle at 90% 92%, rgba(205,230,250,.6), transparent 40%),
+        linear-gradient(148deg, #f9fdff 0%, #eff8ff 48%, #f7fcff 100%);
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button, input, textarea { font: inherit; color: inherit; }
+    .shell {
+      width: min(100% - 34px, 1080px);
+      margin: 0 auto;
+      padding-bottom: max(48px, env(safe-area-inset-bottom));
+    }
+
+    /* ── 顶栏 ── */
+    .top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: max(20px, env(safe-area-inset-top)) 0 18px;
+    }
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 6px 15px 6px 7px;
+      border: 1px solid rgba(255,255,255,.74);
+      border-radius: 16px;
+      color: var(--ink);
+      background: rgba(255,255,255,.5);
+      box-shadow: 0 10px 30px rgba(43,116,153,.08), inset 0 1px 0 #fff;
+      backdrop-filter: blur(18px) saturate(145%);
+      -webkit-backdrop-filter: blur(18px) saturate(145%);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 650;
+      transition: transform 180ms ease, box-shadow 220ms ease;
+    }
+    .back:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(43,116,153,.13), inset 0 1px 0 #fff; }
+    .back img { width: 32px; height: 32px; }
+    .spacer { flex: 1; }
+    .seg {
+      display: flex;
+      gap: 3px;
+      padding: 3px;
+      border: 1px solid rgba(255,255,255,.7);
+      border-radius: 14px;
+      background: rgba(255,255,255,.44);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .seg button {
+      min-height: 36px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 11px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 620;
+      transition: color 160ms ease, background 160ms ease;
+    }
+    .seg button[aria-pressed="true"] { color: #0d5c84; background: #fff; box-shadow: 0 2px 8px rgba(43,116,153,.12); }
+    .act {
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid rgba(255,255,255,.74);
+      border-radius: 14px;
+      color: var(--ink);
+      background: rgba(255,255,255,.5);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 620;
+      transition: background 160ms ease, color 160ms ease, transform 100ms ease;
+    }
+    .act:hover { background: rgba(255,255,255,.78); }
+    .act:active { transform: scale(.97); }
+    .act.primary { color: #fff; border-color: transparent; background: var(--accent); }
+    .act.primary:hover { background: #1580c0; }
+    :where(.back, .act, .seg button, .card, .row):focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+    .intro { padding: 6px 2px 24px; }
+    .eyebrow { margin: 0 0 12px; color: rgba(19,111,151,.6); font-size: 11px; font-weight: 680; letter-spacing: .17em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(30px, 5.4vw, 46px); font-weight: 560; letter-spacing: -.05em; line-height: 1.05; }
+    .subtitle { max-width: 560px; margin: 14px 0 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .hint { margin: 10px 0 0; color: var(--faint); font-size: 12.5px; }
+
+    /* ── 一览：图标 + 名称 ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+      gap: 8px;
+    }
+    .card {
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 11px;
+      padding: 18px 8px 29px;   /* 底部那 14px 是给「再点一次打开」预留的，空着也留 */
+      border: 1px solid transparent;
+      border-radius: 22px;
+      background: transparent;
+      cursor: pointer;
+      text-align: center;
+      transition: background 180ms ease, border-color 180ms ease, transform 120ms ease;
+    }
+    .card:hover { background: rgba(255,255,255,.5); border-color: rgba(255,255,255,.72); }
+    .card[data-selected="true"] {
+      background: rgba(255,255,255,.82);
+      border-color: rgba(27,143,212,.42);
+      box-shadow: 0 10px 30px rgba(43,116,153,.12), inset 0 1px 0 #fff;
+    }
+    .icon {
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 17px;
+      background: #fff;
+      box-shadow: 0 8px 22px rgba(43,116,153,.13);
+      flex: none;
+    }
+    .icon img { width: 38px; height: 38px; object-fit: contain; }
+    /* 取不到站点图标时的退路：名称首字，色相由网址推出来，同一个站永远同一个颜色 */
+    .icon .letter {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      color: #fff;
+      font-size: 25px;
+      font-weight: 600;
+    }
+    .card .name {
+      max-width: 100%;
+      color: var(--ink);
+      font-size: 12.5px;
+      font-weight: 600;
+      line-height: 1.35;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      word-break: break-word;
+    }
+    .go {
+      position: absolute;
+      left: 50%;
+      bottom: 6px;
+      padding: 2px 9px;
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(16,64,92,.86);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: .04em;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translate(-50%, 4px);
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 200ms cubic-bezier(.2,.9,.2,1);
+    }
+    .card[data-selected="true"] .go { opacity: 1; transform: translate(-50%, 0); }
+
+    /* ── 详细：图标 | 名称+网址 | 备注 ── */
+    .list { display: flex; flex-direction: column; gap: 9px; }
+    .row {
+      display: grid;
+      grid-template-columns: auto minmax(150px, 232px) 1fr auto;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,.76);
+      border-radius: 19px;
+      background: var(--card);
+      box-shadow: 0 12px 34px rgba(45,112,146,.07), inset 0 1px 0 rgba(255,255,255,.95);
+      backdrop-filter: blur(20px) saturate(145%);
+      -webkit-backdrop-filter: blur(20px) saturate(145%);
+      cursor: pointer;
+      text-align: left;
+      transition: transform 200ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms ease, border-color 200ms ease;
+    }
+    .row:hover { transform: translateY(-2px); box-shadow: 0 18px 44px rgba(45,112,146,.12), inset 0 1px 0 #fff; }
+    .row[data-selected="true"] { border-color: rgba(27,143,212,.5); box-shadow: 0 16px 40px rgba(27,143,212,.16), inset 0 1px 0 #fff; }
+    .row .icon { width: 46px; height: 46px; border-radius: 14px; }
+    .row .icon img { width: 30px; height: 30px; }
+    .row .icon .letter { font-size: 20px; }
+    .row-main { min-width: 0; }
+    .row-name { display: block; font-size: 15px; font-weight: 640; letter-spacing: -.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row-url { display: block; margin-top: 3px; color: var(--accent); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row-note { min-width: 0; color: var(--muted); font-size: 13px; line-height: 1.6; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+    .row-note:empty::before { content: "没写备注"; color: var(--faint); font-style: italic; }
+    .row-side { display: flex; gap: 6px; align-items: center; }
+    .mini {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--muted);
+      background: rgba(255,255,255,.6);
+      cursor: pointer;
+      font-size: 14px;
+      transition: color 150ms ease, background 150ms ease, border-color 150ms ease;
+    }
+    .mini:hover { color: var(--ink); background: #fff; }
+    .mini.del:hover { color: var(--danger); border-color: rgba(210,84,63,.4); }
+    .first-flag {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      color: #0d5c84;
+      background: rgba(27,143,212,.13);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: .04em;
+      vertical-align: 2px;
+    }
+
+    /* ── 编辑模式：抖动 + 删除角标 + 拖动 ── */
+    .grid[data-editing="true"] .card { touch-action: none; }
+    .grid[data-editing="true"] .card .icon { animation: jiggle 620ms ease-in-out infinite; }
+    .grid[data-editing="true"] .card:nth-child(even) .icon { animation-delay: -310ms; }
+    .card.dragging { z-index: 5; }
+    .card.dragging .icon { animation: none; transform: scale(1.14); box-shadow: 0 18px 40px rgba(43,116,153,.3); }
+    .card.settling { transition: transform 260ms cubic-bezier(.2,.9,.2,1); }
+    @keyframes jiggle {
+      0%, 100% { transform: rotate(-1.5deg); }
+      50% { transform: rotate(1.5deg); }
+    }
+    .badge {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      display: none;
+      place-items: center;
+      width: 23px;
+      height: 23px;
+      padding: 0;
+      border: 1.5px solid #fff;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--danger);
+      box-shadow: 0 3px 10px rgba(0,0,0,.22);
+      cursor: pointer;
+      font-size: 15px;
+      line-height: 1;
+    }
+    .grid[data-editing="true"] .badge { display: grid; }
+    .card.dragging .badge { display: none; }
+    .edit-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 11px 15px;
+      border: 1px solid rgba(27,143,212,.28);
+      border-radius: 16px;
+      color: #0d5c84;
+      background: rgba(217,240,252,.62);
+      font-size: 13px;
+    }
+    .edit-bar[data-on="true"] { display: flex; }
+
+    .empty {
+      padding: 60px 20px;
+      border: 1px dashed var(--line);
+      border-radius: 22px;
+      color: var(--faint);
+      text-align: center;
+      font-size: 14px;
+    }
+
+    /* ── 表单 ── */
+    dialog {
+      width: min(100% - 32px, 468px);
+      padding: 0;
+      border: 1px solid rgba(255,255,255,.86);
+      border-radius: 26px;
+      background: rgba(252,254,255,.96);
+      box-shadow: 0 34px 90px rgba(28,74,100,.24);
+      backdrop-filter: blur(26px);
+      -webkit-backdrop-filter: blur(26px);
+    }
+    dialog::backdrop { background: rgba(19,58,80,.34); backdrop-filter: blur(3px); }
+    .form { padding: 26px; }
+    .form h2 { margin: 0 0 20px; font-size: 21px; font-weight: 620; letter-spacing: -.03em; }
+    .field { margin-bottom: 15px; }
+    .field label { display: block; margin: 0 0 7px 2px; color: #405d6e; font-size: 12.5px; font-weight: 620; }
+    .field input, .field textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      outline: none;
+      background: rgba(255,255,255,.86);
+      font-size: 14px;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+    .field textarea { min-height: 88px; resize: vertical; line-height: 1.6; }
+    .field input:focus, .field textarea:focus { border-color: rgba(27,143,212,.55); box-shadow: 0 0 0 4px var(--focus); }
+    .field .tip { margin: 6px 0 0 2px; color: var(--faint); font-size: 11.5px; }
+    .form-error { margin: 0 0 14px; color: var(--danger); font-size: 12.5px; min-height: 0; }
+    .form-error:empty { display: none; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 22px; }
+
+    @media (max-width: 720px) {
+      .row { grid-template-columns: auto 1fr auto; row-gap: 10px; }
+      .row-note { grid-column: 1 / -1; -webkit-line-clamp: 4; }
+      .top { flex-wrap: wrap; }
+      .back span { display: none; }
+    }
+    @media (max-width: 460px) {
+      .shell { width: min(100% - 22px, 1080px); }
+      .grid { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+      .icon { width: 52px; height: 52px; border-radius: 15px; }
+      .icon img { width: 34px; height: 34px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      .grid[data-editing="true"] .card .icon { animation: none; }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      .row, .back, .act, .seg, dialog { background: #f8fcfe; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="top">
+      <a class="back" href="../../personal/" aria-label="返回我的个人空间">
+        <img src="../../assets/mark-icon-small.png" srcset="../../assets/mark-icon-small.png 1x, ../../assets/mark-icon.png 2x" alt="" width="32" height="32">
+        <span>我的个人空间</span>
+      </a>
+      <div class="spacer"></div>
+      <div class="seg" role="group" aria-label="视图">
+        <button id="viewIcon" type="button" aria-pressed="true">一览</button>
+        <button id="viewList" type="button" aria-pressed="false">详细</button>
+      </div>
+      <button class="act" id="editBtn" type="button">编辑</button>
+      <button class="act primary" id="addBtn" type="button">添加</button>
+    </div>
+
+    <div class="intro">
+      <p class="eyebrow">Navigator</p>
+      <h1>导航</h1>
+      <p class="subtitle">常去的网站收在这里。点一下选中，再点一下才会打开——省得手滑就跳走。</p>
+      <p class="hint" id="hint"></p>
+    </div>
+
+    <div class="edit-bar" id="editBar">
+      <strong>编辑中</strong>
+      <span>拖动图标可以重新排序，点右上角红点删除，点图标本身改内容。</span>
+      <div class="spacer"></div>
+      <button class="act" id="doneBtn" type="button">完成</button>
+    </div>
+
+    <div id="stage"></div>
+  </main>
+
+  <dialog id="editor">
+    <form class="form" id="editorForm" method="dialog">
+      <h2 id="editorTitle">添加网站</h2>
+      <div class="field">
+        <label for="fName">名称</label>
+        <input id="fName" name="name" type="text" maxlength="40" autocomplete="off" required>
+      </div>
+      <div class="field">
+        <label for="fUrl">网址</label>
+        <input id="fUrl" name="url" type="text" inputmode="url" autocomplete="off" placeholder="example.com" required>
+        <p class="tip">不写 https:// 也行，会自动补上。</p>
+      </div>
+      <div class="field">
+        <label for="fNote">备注</label>
+        <textarea id="fNote" name="note" maxlength="600" placeholder="这个站是干嘛的、为什么收藏它——详细视图里会完整显示。"></textarea>
+      </div>
+      <div class="field">
+        <label for="fIcon">图标地址（可留空）</label>
+        <input id="fIcon" name="icon" type="text" inputmode="url" autocomplete="off" placeholder="留空就自动去这个站点取">
+      </div>
+      <p class="form-error" id="formError"></p>
+      <div class="form-actions">
+        <button class="act" type="button" id="cancelBtn">取消</button>
+        <button class="act primary" type="submit" id="saveBtn">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="./nav.js" defer></script>
+</body>
+</html>
