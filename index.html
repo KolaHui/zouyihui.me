@@ -1,533 +1,319 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="day">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f4fbff">
-  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#f5f3eb">
+  <meta name="color-scheme" content="light dark">
   <meta name="description" content="Zou Yihui 的个人主页">
   <title>ZOUYIHUI.ME</title>
   <link rel="icon" href="./assets/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="./assets/mark-180.png">
+  <script>
+    try {
+      if (localStorage.getItem("zou-home-theme") === "night") {
+        document.documentElement.dataset.theme = "night";
+        document.querySelector('meta[name="theme-color"]').content = "#202923";
+      }
+    } catch (_) { /* Storage can be unavailable in private browsing. */ }
+  </script>
   <style>
     :root {
       color-scheme: light;
-      font: 100%/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
-      font-synthesis: none;
-      --ink: #102c3e;
-      --edge: clamp(18px, 3vw, 34px);
-      --mark-box: 74px;
-      --mark-half: 37px;
-      /* 标志画布比标志本身大一圈：定版构图里结的外接框只占画面 48%
-         （4096 母版中 1971px 宽），所以画布要按 视觉尺寸 ÷ .48 放，
-         多出来的部分是透明留白，不影响布局 */
-      --mark-canvas: 133px;
-      --mark-intro: 3.8;
-      /* 成形时标志停在屏幕正中，这两个值是中心相对左上角停靠位的位移 */
-      --cx: calc(50vw - var(--edge) - var(--mark-half));
-      --cy: calc(50svh - var(--edge) - var(--mark-half));
-      --tilt-x: 0deg;
-      --tilt-y: 0deg;
+      --paper: #f5f3eb;
+      --ink: #344c3a;
+      --muted: #5e6957;
+      --line: #cdd2c3;
+      --green: #344f3c;
+      --on-green: #f6f5ed;
+      --disc: #e7e9dc;
+      --disc-light: #fffff5;
+      --sun: #eddfb9;
+      --shadow: #65725a;
+      --shadow-opacity: .18;
+      color: var(--ink);
+      background: var(--paper);
+      -webkit-font-smoothing: antialiased;
+    }
+    :root[data-theme="night"] {
+      color-scheme: dark;
+      --paper: #202923;
+      --ink: #e5e7d8;
+      --muted: #adb6a5;
+      --line: #59664f;
+      --green: #c7d2b9;
+      --on-green: #253629;
+      --disc: #303d31;
+      --disc-light: #4a5840;
+      --sun: #526044;
+      --shadow: #0c180f;
+      --shadow-opacity: .4;
     }
     * { box-sizing: border-box; }
-    html, body { min-height: 100%; }
-    body {
-      margin: 0;
-      min-height: 100svh;
-      overflow: hidden;
-      color: var(--ink);
-      background: #f3faff;
-      -webkit-font-smoothing: antialiased;
-      -webkit-tap-highlight-color: transparent;
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body { min-width: 280px; overflow: hidden; background: var(--paper); transition: background-color 700ms ease; }
+    button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    button { color: inherit; }
+    button:not(:disabled), a { cursor: pointer; }
+    button:disabled { cursor: default; }
+    a { color: inherit; }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--green); outline-offset: 6px; }
+    [hidden] { display: none !important; }
+    .skip-link { position: fixed; top: 20px; left: 24px; z-index: 20; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--on-green); background: var(--green); transform: translateY(-160%); }
+    .skip-link:focus { transform: none; }
+    .icon { display: block; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+    .atmosphere { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+    .sunlight { position: absolute; width: 125vmax; height: 125vmax; top: -82vmax; left: -45vmax; background: radial-gradient(ellipse, var(--sun), transparent 65%); opacity: .8; animation: sunlight 26s ease-in-out infinite alternate; }
+    .window-light { position: absolute; width: 110vw; height: 150vh; top: -70vh; right: -40vw; transform: rotate(-35deg); background: repeating-linear-gradient(90deg, transparent 0 15%, var(--shadow) 15.5% 17%, transparent 17.7% 30%); filter: blur(13px); opacity: .095; mask-image: linear-gradient(#000, transparent 93%); }
+    .leaf-shadow { position: absolute; width: min(78vw, 1070px); height: auto; right: -21vw; top: -20vh; color: var(--shadow); filter: blur(8px); opacity: var(--shadow-opacity); transform-origin: 90% 5%; animation: breeze 19s ease-in-out infinite alternate; }
+    .paper-grain { position: absolute; inset: 0; opacity: .05; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.84' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23606b4d' filter='url(%23n)' d='M0 0h180v180H0z'/%3E%3C/svg%3E"); }
+    .scene { position: relative; z-index: 1; width: 100%; height: 100svh; display: grid; place-items: center; overflow: hidden; isolation: isolate; }
+    .sculpture { position: relative; width: min(61vw, 63svh, 540px); aspect-ratio: 1; animation: arrive 1400ms cubic-bezier(.2,.7,.2,1) both; }
+    .art-disc { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 31% 22%, var(--disc-light), var(--disc) 78%); box-shadow: inset 1px 2px 4px #ffffff28, 22px 38px 70px -36px #3d47242b; opacity: .72; }
+    .art-disc::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 45%, transparent); }
+    .halo { position: absolute; inset: -5%; border: 1px solid var(--line); border-radius: 50%; opacity: .48; animation: breathe 13s ease-in-out infinite alternate; pointer-events: none; }
+    .halo.outer { inset: -14%; opacity: .16; animation-delay: -6s; }
+    .orbit { position: absolute; inset: -5%; border-radius: 50%; animation: orbit 100s linear infinite; pointer-events: none; }
+    .orbit::before { content: ""; position: absolute; width: 5px; height: 5px; left: 50%; top: -2px; border-radius: 50%; background: var(--paper); border: 1px solid var(--muted); opacity: .65; }
+    .brand-button { position: absolute; inset: 14%; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; }
+    .mark-tilt { position: absolute; inset: 0; display: grid; place-items: center; transition: transform 350ms ease-out; }
+    /* Preserve the original logo geometry, material and transparent canvas margins. */
+    .mark-canvas { position: absolute; width: 157%; height: 157%; pointer-events: none; visibility: hidden; }
+    .mark-still { position: absolute; width: 89%; height: auto; pointer-events: none; }
+    html[data-mark-ready="true"] .mark-canvas { visibility: visible; }
+    html[data-mark-ready="true"] .mark-still { visibility: hidden; }
+    .theme-switch { position: fixed; z-index: 4; top: max(28px, env(safe-area-inset-top)); right: max(32px, env(safe-area-inset-right)); display: flex; align-items: center; gap: 3px; padding: 4px; border: 1px solid color-mix(in srgb, var(--line) 65%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--paper) 35%, transparent); }
+    .theme-choice { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); transition: background-color 250ms ease, color 250ms ease; }
+    .theme-choice .icon { width: 17px; height: 17px; }
+    .theme-choice[aria-pressed="true"] { background: var(--green); color: var(--on-green); }
+    .theme-choice:focus-visible { outline-offset: 3px; }
+    .entry-nav { position: fixed; z-index: 4; left: 50%; bottom: max(32px, env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 12px; transform: translateX(-50%); }
+    .entry { display: grid; place-items: center; width: 58px; height: 58px; border: 1px solid var(--green); border-radius: 50%; color: var(--on-green); background: var(--green); text-decoration: none; box-shadow: 0 5px 20px #2434230d; transition: transform 220ms ease, box-shadow 220ms ease; }
+    .entry .icon { width: 22px; height: 22px; transition: transform 220ms ease; }
+    .entry.secondary { width: 48px; height: 48px; border-color: var(--line); color: var(--muted); background: color-mix(in srgb, var(--paper) 55%, transparent); box-shadow: none; }
+    .entry.secondary .icon { width: 18px; height: 18px; }
+    .entry:hover { transform: translateY(-3px); box-shadow: 0 10px 25px #2434231a; }
+    .entry:not(.secondary):hover .icon { transform: translateX(2px); }
+    .entry:active { transform: scale(.96); }
+    .motion-controls { position: fixed; z-index: 4; left: max(27px, env(safe-area-inset-left)); bottom: max(39px, env(safe-area-inset-bottom)); }
+    .quiet-button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid transparent; border-radius: 50%; background: transparent; color: var(--muted); opacity: .7; transition: opacity 200ms ease, border-color 200ms ease; }
+    .quiet-button .icon { width: 16px; height: 16px; }
+    .quiet-button:hover, .quiet-button:focus-visible { opacity: 1; border-color: var(--line); }
+    .quiet-button:disabled { opacity: .4; }
+    .play-icon, #motionButton[aria-pressed="true"] .pause-icon { display: none; }
+    #motionButton[aria-pressed="true"] .play-icon { display: block; }
+    .ripple { position: absolute; z-index: -1; width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1px solid var(--line); border-radius: 50%; pointer-events: none; animation: ripple 2.8s cubic-bezier(.15,.4,.3,1) both; }
+    html[data-motion-paused="true"] .atmosphere *, html[data-motion-paused="true"] .sculpture, html[data-motion-paused="true"] .sculpture *, html[data-motion-paused="true"] .ripple { animation-play-state: paused !important; }
+    @keyframes arrive { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+    @keyframes sunlight { from { transform: translate3d(-1%, 0, 0); opacity: .65; } to { transform: translate3d(3%, 2%, 0); opacity: .95; } }
+    @keyframes breeze { from { transform: rotate(-12deg) translate3d(0, 0, 0); } to { transform: rotate(-5deg) translate3d(-1%, 1%, 0); } }
+    @keyframes breathe { from { transform: scale(.992); } to { transform: scale(1.025); } }
+    @keyframes orbit { to { transform: rotate(360deg); } }
+    @keyframes ripple { from { opacity: .6; transform: scale(1); } to { opacity: 0; transform: scale(12); } }
+    @media (max-width: 700px) {
+      .sculpture { width: min(72vw, 52svh, 390px); }
+      .theme-switch { top: max(20px, env(safe-area-inset-top)); right: max(20px, env(safe-area-inset-right)); }
+      .leaf-shadow { width: 690px; right: -410px; top: -65px; opacity: calc(var(--shadow-opacity) * .8); }
+      .entry-nav { bottom: max(28px, env(safe-area-inset-bottom)); }
+      .motion-controls { left: max(16px, env(safe-area-inset-left)); bottom: max(35px, env(safe-area-inset-bottom)); }
+      .halo.outer { inset: -10%; }
     }
-    button, a { font: inherit; }
-    .skip-link {
-      position: fixed;
-      z-index: 100;
-      top: 10px;
-      left: 50%;
-      padding: 10px 14px;
-      border-radius: 999px;
-      color: #0b3550;
-      background: rgba(255,255,255,.96);
-      box-shadow: 0 10px 32px rgba(22,75,104,.14);
-      transform: translate(-50%, -150%);
-      transition: transform 180ms ease;
+    @media (max-height: 480px) and (orientation: landscape) {
+      .sculpture { width: 65svh; }
+      .entry-nav { left: auto; right: 25px; bottom: 25px; transform: none; }
+      .motion-controls { bottom: 25px; }
+      .theme-switch { top: 20px; right: 25px; }
     }
-    .skip-link:focus { transform: translate(-50%, 0); }
-    .world {
-      position: fixed;
-      inset: 0;
-      isolation: isolate;
-      overflow: hidden;
-      background:
-        radial-gradient(ellipse at 49% 43%, rgba(255,255,255,.98) 0 12%, rgba(246,252,255,.64) 34%, transparent 66%),
-        radial-gradient(ellipse at 18% 8%, rgba(147,229,241,.18), transparent 44%),
-        radial-gradient(ellipse at 91% 88%, rgba(82,163,227,.13), transparent 45%),
-        linear-gradient(142deg, #fbfeff 0%, #eef9ff 52%, #f8fcff 100%);
-    }
-    .world::after {
-      content: "";
-      position: absolute;
-      z-index: 4;
-      inset: 0;
-      pointer-events: none;
-      opacity: .055;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.15'/%3E%3C/svg%3E");
-    }
-    .ambient-canvas {
-      position: absolute;
-      z-index: 1;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      contain: strict;
-    }
-    .brand-stage {
-      position: fixed;
-      z-index: 30;
-      top: var(--edge);
-      left: var(--edge);
-      width: var(--mark-box);
-      height: var(--mark-box);
-      transform-origin: center;
-      /* 缓动已经编码在下面的采样点里了，这里必须 linear，再叠一层会二次减速 */
-      animation: dock-logo 3.98s linear both;
-      will-change: transform;
-    }
-    html[data-docked="true"] .brand-stage { will-change: auto; }
-    .brand-button {
-      position: relative;
-      display: grid;
-      place-items: center;
-      width: var(--mark-box);
-      height: var(--mark-box);
-      padding: 0;
-      border: 0;
-      border-radius: 22px;
-      color: #159bd8;
-      background: transparent;
-      cursor: pointer;
-      outline: none;
-    }
-    .brand-button::before {
-      content: "";
-      position: absolute;
-      inset: 1px;
-      border: 1px solid rgba(255,255,255,.84);
-      border-radius: 21px;
-      opacity: 0;
-      background: linear-gradient(145deg, rgba(255,255,255,.72), rgba(227,246,253,.36));
-      box-shadow: 0 12px 34px rgba(43,116,153,.11), inset 0 1px 0 rgba(255,255,255,.94);
-      backdrop-filter: blur(16px) saturate(145%);
-      -webkit-backdrop-filter: blur(16px) saturate(145%);
-      transform: scale(.82);
-      transition: opacity 220ms ease, transform 380ms cubic-bezier(.2,.9,.2,1);
-    }
-    html[data-docked="true"] .brand-button:hover::before,
-    html[data-docked="true"] .brand-button:focus-visible::before { opacity: 1; transform: scale(1); }
-    .brand-button:focus-visible { box-shadow: 0 0 0 4px rgba(39,155,215,.17); }
-    .mark-tilt {
-      position: relative;
-      z-index: 1;
-      width: var(--mark-box);
-      height: var(--mark-box);
-      transform: perspective(600px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
-      transform-style: preserve-3d;
-      transition: transform 120ms linear;
-      will-change: auto;
-    }
-    html[data-rendering="true"] .mark-tilt { will-change: transform; }
-    /* 画布比按钮大，居中溢出 —— 溢出的部分全是透明的 */
-    .mark-canvas, .mark-still {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      display: block;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-    .mark-canvas { width: var(--mark-canvas); height: var(--mark-canvas); }
-    /* 退路用的是紧凑裁切的图标（结占 86%），所以框比画布小得多 */
-    .mark-still { width: var(--mark-box); height: var(--mark-box); }
-    html:not([data-mark-fallback="true"]) .mark-still { display: none; }
-    html[data-mark-fallback="true"] .mark-canvas { display: none; }
-    .entry-nav {
-      position: fixed;
-      z-index: 20;
-      right: max(var(--edge), env(safe-area-inset-right));
-      bottom: max(var(--edge), env(safe-area-inset-bottom));
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      opacity: 0;
-      transform: translate3d(0,12px,0);
-      /* 形在 2.45 收紧完成，入口就跟着浮上来 —— 不必等标志归位 */
-      animation: reveal-nav 700ms cubic-bezier(.2,.9,.2,1) 2.55s forwards;
-    }
-    .entry {
-      position: relative;
-      display: inline-flex;
-      min-height: 50px;
-      align-items: center;
-      justify-content: center;
-      gap: 9px;
-      padding: 0 18px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,.78);
-      border-radius: 17px;
-      color: rgba(15,48,69,.82);
-      background: linear-gradient(145deg, rgba(255,255,255,.72), rgba(231,247,255,.4));
-      box-shadow: 0 14px 40px rgba(43,116,153,.1), inset 0 1px 0 rgba(255,255,255,.94);
-      backdrop-filter: blur(20px) saturate(145%);
-      -webkit-backdrop-filter: blur(20px) saturate(145%);
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: .01em;
-      text-decoration: none;
-      transition: transform 180ms ease, border-color 220ms ease, box-shadow 260ms ease, color 220ms ease;
-    }
-    .entry::after {
-      content: "";
-      width: 5px;
-      height: 5px;
-      border-top: 1.4px solid currentColor;
-      border-right: 1.4px solid currentColor;
-      opacity: .65;
-      transform: rotate(45deg);
-      transition: transform 200ms ease;
-    }
-    .entry:hover {
-      color: #0d6693;
-      border-color: rgba(255,255,255,.98);
-      box-shadow: 0 18px 48px rgba(38,124,167,.15), inset 0 1px 0 #fff;
-      transform: translateY(-2px);
-    }
-    .entry:hover::after { transform: translateX(2px) rotate(45deg); }
-    .entry:active { transform: scale(.975); transition-duration: 90ms; }
-    .entry:focus-visible { outline: 4px solid rgba(39,155,215,.17); outline-offset: 3px; }
-    .entry.primary { color: #0a526f; background: linear-gradient(145deg, rgba(241,253,255,.84), rgba(200,239,248,.52)); }
-    .whisper {
-      position: fixed;
-      z-index: 10;
-      left: max(var(--edge), env(safe-area-inset-left));
-      bottom: max(var(--edge), env(safe-area-inset-bottom));
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      opacity: 0;
-      background: rgba(24,149,207,.55);
-      box-shadow: 10px 0 0 rgba(79,210,218,.32), 20px 0 0 rgba(255,205,217,.25);
-      animation: reveal-dot 500ms ease 3.6s forwards;
-    }
-    .ripple {
-      position: fixed;
-      z-index: 8;
-      width: 18px;
-      height: 18px;
-      margin: -9px 0 0 -9px;
-      border: 1px solid rgba(44,164,216,.25);
-      border-radius: 50%;
-      pointer-events: none;
-      animation: ripple 1.2s cubic-bezier(.2,.7,.2,1) forwards;
-    }
-    html[data-replay="true"] .brand-stage, html[data-replay="true"] .entry-nav, html[data-replay="true"] .whisper { animation: none; }
-    html[data-replay="true"] .entry-nav, html[data-replay="true"] .whisper { opacity: 0; }
-    /* 归位：2.90s 成形完，再用 1.08s 沿一条向上鼓的弧线缩到左上角。
-       x 走得比 y 慢（进度 e^1.4 对 e^0.7），轨迹就在中心与停靠位之间
-       向上凸出约 8% 对角长 —— 是「飘」过去的，不是直线滑过去。
-       起点 2.90/3.98 = 72.90%，之后每 3.39% 一个采样点。 */
-    @keyframes dock-logo {
-      0%, 72.90% { transform: translate3d(var(--cx), var(--cy), 0) scale(var(--mark-intro)); }
-      76.29% { transform: translate3d(calc(var(--cx) * .868), calc(var(--cy) * .632), 0) scale(calc(1 + (var(--mark-intro) - 1) * .766)); }
-      79.68% { transform: translate3d(calc(var(--cx) * .683), calc(var(--cy) * .436), 0) scale(calc(1 + (var(--mark-intro) - 1) * .562)); }
-      83.06% { transform: translate3d(calc(var(--cx) * .511), calc(var(--cy) * .292), 0) scale(calc(1 + (var(--mark-intro) - 1) * .391)); }
-      86.45% { transform: translate3d(calc(var(--cx) * .340), calc(var(--cy) * .181), 0) scale(calc(1 + (var(--mark-intro) - 1) * .250)); }
-      89.84% { transform: translate3d(calc(var(--cx) * .191), calc(var(--cy) * .101), 0) scale(calc(1 + (var(--mark-intro) - 1) * .141)); }
-      93.23% { transform: translate3d(calc(var(--cx) * .086), calc(var(--cy) * .044), 0) scale(calc(1 + (var(--mark-intro) - 1) * .062)); }
-      96.61% { transform: translate3d(calc(var(--cx) * .022), calc(var(--cy) * .011), 0) scale(calc(1 + (var(--mark-intro) - 1) * .016)); }
-      100% { transform: translate3d(0,0,0) scale(1); }
-    }
-    @keyframes reveal-nav { to { opacity: 1; transform: none; } }
-    @keyframes reveal-dot { to { opacity: 1; } }
-    @keyframes ripple { to { opacity: 0; transform: scale(14); } }
-    @media (max-width: 620px) {
-      :root {
-        --edge: max(16px, env(safe-area-inset-left));
-        --mark-box: 64px;
-        --mark-half: 32px;
-        --mark-canvas: 114px;
-        --mark-intro: 3.2;
-      }
-      .brand-button { border-radius: 19px; }
-      .brand-button::before { border-radius: 18px; }
-      .entry-nav { left: max(16px, env(safe-area-inset-left)); right: max(16px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1fr 1fr; }
-      .entry { min-width: 0; padding: 0 13px; font-size: 13px; }
-      .whisper { display: none; }
-    }
-    @media (max-width: 350px) { .entry-nav { grid-template-columns: 1fr; } .entry { min-height: 48px; } }
     @media (prefers-reduced-motion: reduce) {
-      .brand-stage, .entry-nav, .whisper, .ripple { animation: none !important; }
-      .brand-stage { transform: none !important; }
-      .entry-nav, .whisper { opacity: 1; transform: none; }
-      .mark-tilt { transform: none !important; transition: none; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .mark-tilt { transform: none !important; }
+      .motion-controls { display: none; }
     }
-    @media (prefers-reduced-transparency: reduce) {
-      .entry, .brand-button::before { background: #f5fbfe; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    @media (forced-colors: active) {
+      .atmosphere, .art-disc, .halo, .orbit { display: none; }
+      .theme-choice[aria-pressed="true"] { outline: 1px solid ButtonText; }
     }
-  </style>
-</head>
+  </style></head>
 <body>
-  <a class="skip-link" href="#entryNav">跳到入口</a>
-  <main class="world" aria-labelledby="siteTitle">
-    <h1 id="siteTitle" hidden>ZOUYIHUI.ME</h1>
-    <canvas class="ambient-canvas" id="ambientCanvas" aria-hidden="true"></canvas>
-    <div class="brand-stage">
-      <button class="brand-button" id="brandButton" type="button" aria-label="重新播放标志动画">
+  <a class="skip-link" href="#entryNav" aria-label="跳到入口"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5M5 20h14"/></svg></a>
+  <div class="atmosphere" aria-hidden="true">
+    <div class="sunlight"></div>
+    <div class="window-light"></div>
+    <svg class="leaf-shadow" viewBox="0 0 760 850" fill="currentColor">
+      <path d="M759 12C632 190 626 342 477 505S301 711 262 850" fill="none" stroke="currentColor" stroke-width="9"/>
+      <path d="M646 220C554 209 508 149 511 62C595 92 646 136 646 220ZM647 219C659 119 704 77 760 81C753 157 711 207 647 219ZM603 343C512 335 451 276 446 185C537 209 597 269 603 343ZM603 343C618 248 682 209 754 211C733 299 679 342 603 343ZM527 455C425 440 380 382 382 298C462 313 521 372 527 455ZM527 455C574 361 637 333 714 351C676 430 609 468 527 455ZM423 567C332 549 282 477 295 398C378 428 423 477 423 567ZM423 567C468 481 526 465 601 487C557 563 495 591 423 567ZM335 699C258 671 216 616 222 541C302 564 338 621 335 699ZM335 699C377 621 442 606 506 629C461 700 402 723 335 699Z"/>
+      <path d="M603 343Q431 231 308 261M477 505Q589 559 675 553" fill="none" stroke="currentColor" stroke-width="5"/>
+      <path d="M434 270C364 246 335 195 355 144C410 173 440 217 434 270ZM383 257C338 302 294 316 250 293C288 253 335 234 383 257ZM581 543C597 491 625 465 673 467C660 513 629 539 581 543ZM581 543C634 546 665 575 671 618C618 613 588 586 581 543Z"/>
+    </svg>
+    <div class="paper-grain"></div>
+  </div>
+  <main class="scene" aria-label="Zou Yihui 的个人主页">
+    <div class="sculpture">
+      <div class="halo outer" aria-hidden="true"></div>
+      <div class="halo" aria-hidden="true"></div>
+      <div class="art-disc" aria-hidden="true"></div>
+      <div class="orbit" aria-hidden="true"></div>
+      <button class="brand-button" id="brandButton" type="button" aria-label="重新播放标志动画" disabled>
         <span class="mark-tilt">
           <canvas class="mark-canvas" id="markCanvas" aria-hidden="true"></canvas>
-          <img class="mark-still" src="./assets/mark-still.png" alt="" aria-hidden="true" width="74" height="74">
+          <img class="mark-still" src="./assets/mark-still.png" alt="Zou Yihui 标志" width="500" height="500">
         </span>
       </button>
     </div>
-    <nav class="entry-nav" id="entryNav" aria-label="主页入口">
-      <a class="entry primary" href="./personal/">我的个人空间</a>
-      <a class="entry" href="./apps/admin/">管理后台</a>
-    </nav>
-    <span class="whisper" aria-hidden="true"></span>
   </main>
+  <div class="theme-switch" role="group" aria-label="主题" hidden>
+    <button class="theme-choice" type="button" data-theme-choice="day" aria-label="日光主题" aria-pressed="true"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.2"/><path d="M10 1.5v2m0 13v2M1.5 10h2m13 0h2M4 4l1.4 1.4m9.2 9.2L16 16M4 16l1.4-1.4m9.2-9.2L16 4"/></svg></button>
+    <button class="theme-choice" type="button" data-theme-choice="night" aria-label="夜读主题" aria-pressed="false"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.6 12.1A7 7 0 0 1 7.9 3.4a7 7 0 1 0 8.7 8.7Z"/></svg></button>
+  </div>
+  <nav class="entry-nav" id="entryNav" aria-label="主页入口">
+    <a class="entry" href="./personal/" aria-label="进入个人空间"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 4h6a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-6M3 12h12m-4-4 4 4-4 4"/></svg></a>
+    <a class="entry secondary" href="./apps/admin/" aria-label="管理后台"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></a>
+  </nav>
+  <div class="motion-controls" hidden>
+    <button class="quiet-button" id="motionButton" type="button" aria-pressed="false" aria-label="暂停动画">
+      <svg class="icon pause-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10m6-10v10"/></svg>
+      <svg class="icon play-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 8 6-8 6Z"/></svg>
+    </button>
+  </div>
   <script type="module">
-    import { createMark, TIMELINE } from "./assets/mark-metal.js";
+    const root = document.documentElement;
+    const themeButtons = document.querySelectorAll("[data-theme-choice]");
+    function setTheme(theme) {
+      root.dataset.theme = theme;
+      themeButtons.forEach(button => button.setAttribute("aria-pressed", String(button.dataset.themeChoice === theme)));
+      document.querySelector('meta[name="theme-color"]').content = theme === "night" ? "#202923" : "#f5f3eb";
+      try { localStorage.setItem("zou-home-theme", theme); } catch (_) {}
+    }
+    setTheme(root.dataset.theme);
+    themeButtons.forEach(button => button.addEventListener("click", () => setTheme(button.dataset.themeChoice)));
+    document.querySelector(".theme-switch").hidden = false;
 
-    (() => {
-      const root = document.documentElement;
-      const world = document.querySelector(".world");
-      const brandButton = document.getElementById("brandButton");
-      const markTilt = document.querySelector(".mark-tilt");
-      const markCanvas = document.getElementById("markCanvas");
-      const ambientCanvas = document.getElementById("ambientCanvas");
-      const ambientContext = ambientCanvas.getContext("2d", { alpha: true });
-      const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
-      const DOCK_END = 3.98;                 // 和 CSS 里 dock-logo 的时长保持一致
-      let introStarted = performance.now();
-      let width = 0, height = 0, ratio = 1;
-      let pointerTargetX = 0, pointerTargetY = 0, pointerX = 0, pointerY = 0;
-      let lastRender = 0, animationFrame = 0, dockTimer = 0, ambientDirty = true;
-      const diagnostics = new URLSearchParams(location.search).has("perf");
-      const stats = { callbacks: 0, frames: 0, skippedCallbacks: 0, markDraws: 0, ambientDraws: 0 };
-      const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
-      /* 成形途中的站数。落定帧不受影响 —— 引擎在冻结点会强制换回完整的 170 站，
-         所以最终那个标志和定版逐像素相同（实测差 0）。
-         降的只是「正在长出来」的那 2.7 秒：170 站要 54ms/帧，跑不满 30fps；
-         96 站是 26ms，而画面平均差 0.213/255 —— 比定版动画相邻两帧之间的
-         0.415 还小一半，看不出来。手机屏更小、GPU 更弱，再低一档。 */
-      const FORMING_N = innerWidth <= 620 ? 80 : 96;
+    const canvas = document.getElementById("markCanvas");
+    const brandButton = document.getElementById("brandButton");
+    const motionButton = document.getElementById("motionButton");
+    const tilt = document.querySelector(".mark-tilt");
+    const controls = document.querySelector(".motion-controls");
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+    const diagnostics = new URLSearchParams(location.search).has("perf");
+    const stats = { frames: 0, callbacks: 0, markDraws: 0 };
+    let mark = null, timeline = null, animationFrame = 0, lastRender = 0;
+    let elapsed = 0, userPaused = false, lastTick = 0;
+    const formingSteps = innerWidth <= 700 ? 80 : 96;
 
-      /* 标志本体：三叶结 · 液态金属。没有 WebGL2 就退回定版静帧 */
-      let mark = null;
+    function stop() {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+      lastTick = 0;
+      lastRender = 0;
+      delete root.dataset.rendering;
+    }
+    function shouldAnimate() { return mark && !document.hidden && !reduceMotion.matches && !userPaused; }
+    function schedule() {
+      if (animationFrame || !shouldAnimate()) return;
+      root.dataset.rendering = "true";
+      animationFrame = requestAnimationFrame(render);
+    }
+    function fallback(error) {
+      stop();
+      mark = null;
+      delete root.dataset.markReady;
+      root.dataset.markFallback = "true";
+      brandButton.disabled = true;
+      if (diagnostics) console.warn("标志使用静帧：", error?.message || "WebGL context unavailable");
+    }
+    function draw() {
       try {
-        mark = createMark(markCanvas);
-      } catch (error) {
-        root.dataset.markFallback = "true";
-        if (diagnostics) console.warn("标志退回静帧：", error.message);
-      }
-
-      function scheduleRender() {
-        if (animationFrame || document.hidden || reduceMotion.matches) return;
-        root.dataset.rendering = "true";
-        animationFrame = requestAnimationFrame(render);
-      }
-
-      function resizeAmbient() {
-        width = innerWidth;
-        height = innerHeight;
-        ratio = 1;
-        ambientCanvas.width = Math.round(width * ratio);
-        ambientCanvas.height = Math.round(height * ratio);
-        ambientCanvas.style.width = `${width}px`;
-        ambientCanvas.style.height = `${height}px`;
-        ambientContext.setTransform(ratio, 0, 0, ratio, 0, 0);
-        ambientDirty = true;
-      }
-
-      function catmullRom(points, samples = 14) {
-        const result = [];
-        for (let index = 0; index < points.length - 1; index += 1) {
-          const p0 = points[Math.max(0, index - 1)], p1 = points[index], p2 = points[index + 1], p3 = points[Math.min(points.length - 1, index + 2)];
-          for (let sample = 0; sample < samples; sample += 1) {
-            const t = sample / samples, t2 = t * t, t3 = t2 * t;
-            result.push({
-              x: .5 * ((2*p1.x) + (-p0.x+p2.x)*t + (2*p0.x-5*p1.x+4*p2.x-p3.x)*t2 + (-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
-              y: .5 * ((2*p1.y) + (-p0.y+p2.y)*t + (2*p0.y-5*p1.y+4*p2.y-p3.y)*t2 + (-p0.y+3*p1.y-3*p2.y+p3.y)*t3)
-            });
-          }
-        }
-        result.push(points[points.length - 1]);
-        return result;
-      }
-
-      function strokeCurve(context, points, progress, style, lineWidth, blur = 0) {
-        if (points.length < 2 || progress <= 0) return;
-        const visible = clamp(progress, 0, 1) * (points.length - 1);
-        const end = Math.max(1, Math.ceil(visible));
-        context.save();
-        context.beginPath();
-        context.moveTo(points[0].x, points[0].y);
-        for (let index = 1; index <= end && index < points.length; index += 1) {
-          const amount = index > visible ? visible - (index - 1) : 1;
-          if (amount <= 0) break;
-          const previous = points[index - 1], current = points[index];
-          context.lineTo(previous.x + (current.x - previous.x) * amount, previous.y + (current.y - previous.y) * amount);
-        }
-        context.strokeStyle = style;
-        context.lineWidth = lineWidth;
-        context.lineCap = "round";
-        context.lineJoin = "round";
-        context.shadowBlur = blur;
-        context.shadowColor = typeof style === "string" ? style : "rgba(39,157,210,.2)";
-        context.stroke();
-        context.restore();
-      }
-
-      function ambientPath(baseY, amplitude, phase, seconds, reverse = false) {
-        const points = [], direction = reverse ? -1 : 1;
-        for (let index = -1; index <= 7; index += 1) {
-          points.push({
-            x: (index/6)*width + pointerX*(index%2?.7:-.35),
-            y: baseY + Math.sin(index*.91+seconds*.12*direction+phase)*amplitude + Math.sin(index*.43-seconds*.075+phase*1.7)*amplitude*.34 + pointerY*.42
-          });
-        }
-        return catmullRom(points, 18);
-      }
-
-      function drawAmbient(seconds) {
-        const context = ambientContext;
-        context.clearRect(0,0,width,height);
-        [
-          {y:height*.28,a:Math.max(38,height*.08),p:.4,c:"rgba(73,205,221,.075)",w:Math.max(58,height*.085),r:false},
-          {y:height*.58,a:Math.max(45,height*.1),p:2.5,c:"rgba(48,145,214,.054)",w:Math.max(76,height*.11),r:true},
-          {y:height*.79,a:Math.max(30,height*.07),p:4.1,c:"rgba(255,198,215,.04)",w:Math.max(50,height*.07),r:false}
-        ].forEach(ribbon => {
-          const path = ambientPath(ribbon.y,ribbon.a,ribbon.p,seconds,ribbon.r);
-          strokeCurve(context,path,1,ribbon.c,ribbon.w);
-          strokeCurve(context,path.map(point => ({x:point.x,y:point.y-ribbon.w*.16})),1,"rgba(255,255,255,.25)",1.1);
-        });
-        stats.ambientDraws += 1;
-      }
-
-      function render(now) {
-        animationFrame = 0;
-        stats.callbacks += 1;
-        const elapsed = (now - introStarted) / 1000;
-        /* 成形段按导出动画的 30 fps 走；落定之后只剩金属在流，降到 20 fps ——
-           条纹一轮 3.7 秒，看不出差别，却省掉三分之一的帧 */
-        const minInterval = elapsed < DOCK_END ? 30 : 50;
-        if (lastRender && now - lastRender < minInterval) {
-          stats.skippedCallbacks += 1;
-          scheduleRender();
-          return;
-        }
-
-        const delta = Math.min(50,lastRender ? now-lastRender : 33.3);
+        mark.draw(elapsed, formingSteps);
+        stats.markDraws += 1;
+        root.dataset.markReady = "true";
+        return true;
+      } catch (error) { fallback(error); return false; }
+    }
+    function render(now) {
+      animationFrame = 0;
+      if (!shouldAnimate()) return;
+      stats.callbacks += 1;
+      if (lastTick) elapsed += Math.min(now - lastTick, 100) / 1000;
+      lastTick = now;
+      const interval = elapsed < timeline.HOLD ? 30 : 50;
+      if (!lastRender || now - lastRender >= interval) {
         lastRender = now;
         stats.frames += 1;
-        const response = 1-Math.pow(.76,delta/33.3);
-        pointerX += (pointerTargetX-pointerX) * response;
-        pointerY += (pointerTargetY-pointerY) * response;
-        markTilt.style.transform = `perspective(600px) rotateX(${(-pointerY*.16).toFixed(2)}deg) rotateY(${(pointerX*.19).toFixed(2)}deg)`;
-        const pointerMoving = Math.abs(pointerTargetX-pointerX) > .015 || Math.abs(pointerTargetY-pointerY) > .015;
-        if (ambientDirty || pointerMoving) {
-          drawAmbient(now/1000);
-          ambientDirty = false;
-        }
-        if (mark) {
-          mark.draw(elapsed, FORMING_N);
-          stats.markDraws += 1;
-        }
-        /* 金属一直在流，所以落定之后也要接着排帧 ——
-           标签页藏起来时由 visibilitychange 掐掉 */
-        scheduleRender();
+        if (!draw()) return;
       }
-
-      function replayIntro() {
-        if (reduceMotion.matches) return;
-        introStarted = performance.now();
-        mark?.reset();
-        delete root.dataset.docked;
-        clearTimeout(dockTimer);
-        root.dataset.replay = "true";
-        void document.body.offsetWidth;
-        delete root.dataset.replay;
-        dockTimer = setTimeout(() => { root.dataset.docked = "true"; }, DOCK_END * 1000);
-        ambientDirty = true;
-        scheduleRender();
-      }
-      function motionChanged() {
-        cancelAnimationFrame(animationFrame);
-        animationFrame = 0;
-        lastRender = 0;
-        ambientDirty = true;
-        if (reduceMotion.matches) {
-          drawAmbient(performance.now()/1000);
-          mark?.draw(TIMELINE.HOLD);
-          delete root.dataset.rendering;
-        } else {
-          introStarted = performance.now();
-          mark?.reset();
-          scheduleRender();
-        }
-      }
-      addEventListener("pointermove", event => {
-        if (reduceMotion.matches) return;
-        pointerTargetX = ((event.clientX/innerWidth)-.5)*14;
-        pointerTargetY = ((event.clientY/innerHeight)-.5)*12;
-        ambientDirty = true;
-        scheduleRender();
-      }, {passive:true});
-      addEventListener("pointerleave", () => {
-        pointerTargetX=0;
-        pointerTargetY=0;
-        ambientDirty = true;
-        scheduleRender();
-      }, {passive:true});
-      world.addEventListener("pointerdown", event => {
-        if (reduceMotion.matches || event.target.closest("a, button")) return;
-        const ring = document.createElement("span");
-        ring.className = "ripple";
-        ring.style.left = `${event.clientX}px`;
-        ring.style.top = `${event.clientY}px`;
-        ring.addEventListener("animationend", () => ring.remove(), {once:true});
-        world.append(ring);
-      }, {passive:true});
-      resizeAmbient();
-      if (reduceMotion.matches) root.dataset.docked = "true";
-      else dockTimer = setTimeout(() => { root.dataset.docked = "true"; }, DOCK_END * 1000);
-      addEventListener("resize", () => { resizeAmbient(); scheduleRender(); }, {passive:true});
-      document.addEventListener("visibilitychange", () => {
-        if (document.hidden) {
-          cancelAnimationFrame(animationFrame);
-          animationFrame = 0;
-          lastRender = 0;
-          delete root.dataset.rendering;
-        } else {
-          ambientDirty = true;
-          scheduleRender();
-        }
-      });
-      brandButton.addEventListener("click", replayIntro);
-      reduceMotion.addEventListener?.("change", motionChanged);
-      if (diagnostics) {
-        window.__homeMotionDiagnostics = () => ({ ...stats, rafRunning: Boolean(animationFrame), rendering: root.dataset.rendering === "true" });
-      }
-      if (reduceMotion.matches) {
-        /* 不播成形，直接停在定版那一帧 */
-        drawAmbient(performance.now()/1000);
-        mark?.draw(TIMELINE.HOLD);
-      } else {
-        scheduleRender();
-      }
-    })();
+      schedule();
+    }
+    function syncControls() {
+      const paused = userPaused || reduceMotion.matches;
+      brandButton.disabled = !mark || reduceMotion.matches;
+      motionButton.disabled = reduceMotion.matches;
+      motionButton.setAttribute("aria-pressed", String(paused));
+      root.dataset.motionPaused = String(paused || document.hidden);
+      motionButton.setAttribute("aria-label", userPaused ? "继续动画" : "暂停动画");
+    }
+    function replay() {
+      if (!mark || reduceMotion.matches) return;
+      stop();
+      elapsed = 0;
+      userPaused = false;
+      mark.reset();
+      syncControls();
+      schedule();
+    }
+    motionButton.addEventListener("click", () => {
+      userPaused = !userPaused;
+      if (userPaused) {
+        stop();
+        if (mark && elapsed < timeline.HOLD) { elapsed = timeline.HOLD; draw(); }
+        document.querySelector('.sculpture').getAnimations().forEach(animation => animation.finish());
+      } else schedule();
+      tilt.style.transform = "none";
+      syncControls();
+    });
+    brandButton.addEventListener("click", replay);
+    brandButton.addEventListener("pointermove", event => {
+      if (!shouldAnimate() || event.pointerType !== "mouse") return;
+      const box = brandButton.getBoundingClientRect();
+      const x = (event.clientX - box.left) / box.width - .5;
+      const y = (event.clientY - box.top) / box.height - .5;
+      tilt.style.transform = `perspective(800px) rotateX(${-y * 6}deg) rotateY(${x * 7}deg)`;
+    }, { passive: true });
+    brandButton.addEventListener("pointerleave", () => { tilt.style.transform = "none"; }, { passive: true });
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stop(); else schedule();
+      syncControls();
+    });
+    const scene = document.querySelector(".scene");
+    scene.addEventListener("pointerdown", event => {
+      if (reduceMotion.matches || userPaused || event.target.closest("button, a") || scene.querySelectorAll(".ripple").length >= 4) return;
+      const ring = document.createElement("span");
+      ring.className = "ripple";
+      ring.setAttribute("aria-hidden", "true");
+      ring.style.left = `${event.clientX}px`;
+      ring.style.top = `${event.clientY}px`;
+      ring.addEventListener("animationend", () => ring.remove(), { once: true });
+      scene.append(ring);
+    }, { passive: true });
+    reduceMotion.addEventListener("change", () => {
+      stop();
+      tilt.style.transform = "none";
+      scene.querySelectorAll(".ripple").forEach(ring => ring.remove());
+      if (mark && reduceMotion.matches) { elapsed = Math.max(elapsed, timeline.HOLD); draw(); }
+      syncControls();
+      schedule();
+    });
+    canvas.addEventListener("webglcontextlost", event => { event.preventDefault(); fallback(); });
+    if (diagnostics) window.__homeMotionDiagnostics = () => ({ ...stats, rafRunning: Boolean(animationFrame), rendering: root.dataset.rendering === "true", elapsed, paused: userPaused, reducedMotion: reduceMotion.matches });
+    controls.hidden = false;
+    syncControls();
+    try {
+      const engine = await import("./assets/mark-metal.js");
+      timeline = engine.TIMELINE;
+      mark = engine.createMark(canvas);
+      syncControls();
+      if (reduceMotion.matches) { elapsed = timeline.HOLD; draw(); }
+      else schedule();
+    } catch (error) { fallback(error); }
   </script>
 </body>
 </html>
